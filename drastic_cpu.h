@@ -41,7 +41,6 @@ void store_memory32(long param_1,ulong param_2,undefined4 param_3);
 void store_memory16(long param_1,ulong param_2,undefined2 param_3);
 void store_memory8(long param_1,ulong param_2,undefined1 param_3);
 void execute_arm_set_cpsr(long param_1,undefined4 param_2);
-uint coprocessor_register_load(long param_1,ulong param_2);
 void coprocessor_register_store(long *param_1,int param_2,int param_3,int param_4,ulong param_5);
 // __printf_chk 是 glibc 的内部函数，需要声明
 int __printf_chk(int flag, const char *format, ...);
