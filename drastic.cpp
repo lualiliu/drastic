@@ -44,6 +44,46 @@ int __xstat(int version, const char* path, struct stat* buf);
 int __snprintf_chk(char* str, size_t maxlen, int flag, size_t strlen, const char* format, ...);
 }
 
+// 实现缺失的函数
+extern "C" {
+void __stack_chk_fail()
+{
+  abort();
+}
+
+char* __strcpy_chk(char* dest, const char* src, size_t destlen)
+{
+  if (destlen == 0) {
+    return dest;
+  }
+  size_t src_len = strlen(src);
+  if (src_len >= destlen) {
+    abort(); // 缓冲区溢出检测
+  }
+  return strcpy(dest, src);
+}
+
+int __longjmp_chk(void* env, int val)
+{
+  longjmp((jmp_buf)env, val);
+  return 0; // 永远不会执行到这里
+}
+
+int __xstat(int version, const char* path, struct stat* buf)
+{
+  return stat(path, buf);
+}
+
+int __snprintf_chk(char* str, size_t maxlen, int flag, size_t strlen, const char* format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  int result = vsnprintf(str, maxlen, format, args);
+  va_end(args);
+  return result;
+}
+}
+
 
 int main(int param_1, char** param_2)
 
@@ -7353,7 +7393,7 @@ void update_screen_menu(void)
 }
 
 // --- 函数: clear_gui_actions ---
-/*
+
 void clear_gui_actions(void)
 
 {
@@ -7361,7 +7401,6 @@ void clear_gui_actions(void)
   DAT_040315f8 = 0;
   return;
 }
-*/
 // --- 函数: delay_us ---
 
 void delay_us(ulong param_1)
