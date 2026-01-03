@@ -2303,7 +2303,7 @@ void execute_arm_coprocessor_register_transfer_op(long param_1,ulong param_2)
   if ((param_2 & 0xe00000) == 0 && ((uint)(uVar6 >> 8) & 0xf) == 0xf) {
     uVar7 = uVar6 >> 0xc & 0xf;
     if (((uint)param_2 >> 0x14 & 1) != 0) {
-      uVar2 = coprocessor_register_load(param_1,param_2);
+      uVar2 = coprocessor_register_load(param_1,param_2,0,0);
       *(undefined4 *)(param_1 + (uVar7 + 0x8dc) * 4) = uVar2;
       return;
     }

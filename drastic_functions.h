@@ -5,10 +5,83 @@
 #ifndef DRASTIC_FUNCTIONS_H
 #define DRASTIC_FUNCTIONS_H
 
+#include <cstdint>
+#include <cstring>
 //#include <stdio.h>
 #include "drastic_val.h"
 // SDL2
+#ifdef HAVE_SDL2
 #include <SDL2/SDL.h>
+#else
+// SDL2 存根定义，用于在没有SDL2时编译
+typedef unsigned int Uint32;
+typedef unsigned short Uint16;
+typedef unsigned char Uint8;
+typedef signed int Sint32;
+typedef signed short Sint16;
+typedef signed char Sint8;
+typedef struct SDL_Window {} SDL_Window;
+typedef struct SDL_Renderer {} SDL_Renderer;
+typedef struct SDL_Texture {} SDL_Texture;
+typedef struct SDL_Event {} SDL_Event;
+typedef struct SDL_DisplayMode {} SDL_DisplayMode;
+typedef struct SDL_Rect { int x, y, w, h; } SDL_Rect;
+typedef struct SDL_Joystick {} SDL_Joystick;
+typedef struct SDL_Haptic {} SDL_Haptic;
+typedef struct SDL_AudioSpec {} SDL_AudioSpec;
+#define SDL_INIT_VIDEO 0x00000020
+#define SDL_INIT_AUDIO 0x00000010
+#define SDL_INIT_JOYSTICK 0x00000200
+#define SDL_INIT_HAPTIC 0x00001000
+#define SDL_WINDOWPOS_UNDEFINED 0x1FFF0000
+#define SDL_WINDOW_FULLSCREEN 0x00000001
+#define SDL_RENDERER_ACCELERATED 0x00000002
+#define SDL_TEXTUREACCESS_STREAMING 1
+#define SDL_BLENDMODE_BLEND 1
+#define SDL_PIXELFORMAT_RGBA8888 0
+#define SDL_PIXELFORMAT_RGB565 0
+static inline int SDL_Init(Uint32 flags) { return 0; }
+static inline SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags) { return NULL; }
+static inline SDL_Renderer* SDL_CreateRenderer(SDL_Window* window, int index, Uint32 flags) { return NULL; }
+static inline SDL_Texture* SDL_CreateTexture(SDL_Renderer* renderer, Uint32 format, int access, int w, int h) { return NULL; }
+static inline int SDL_UpdateTexture(SDL_Texture* texture, const void* rect, const void* pixels, int pitch) { return 0; }
+static inline int SDL_RenderCopy(SDL_Renderer* renderer, SDL_Texture* texture, const void* srcrect, const void* dstrect) { return 0; }
+static inline void SDL_RenderPresent(SDL_Renderer* renderer) {}
+static inline void SDL_RenderClear(SDL_Renderer* renderer) {}
+static inline int SDL_RenderSetLogicalSize(SDL_Renderer* renderer, int w, int h) { return 0; }
+static inline void SDL_RenderGetLogicalSize(SDL_Renderer* renderer, int* w, int* h) {}
+static inline int SDL_SetRenderDrawColor(SDL_Renderer* renderer, Uint8 r, Uint8 g, Uint8 b, Uint8 a) { return 0; }
+static inline int SDL_SetRenderDrawBlendMode(SDL_Renderer* renderer, int blendMode) { return 0; }
+static inline int SDL_SetTextureBlendMode(SDL_Texture* texture, int blendMode) { return 0; }
+static inline int SDL_SetWindowSize(SDL_Window* window, int w, int h) { return 0; }
+static inline int SDL_SetWindowFullscreen(SDL_Window* window, Uint32 flags) { return 0; }
+static inline int SDL_GetCurrentDisplayMode(int displayIndex, SDL_DisplayMode* mode) { return 0; }
+static inline int SDL_PollEvent(SDL_Event* event) { return 0; }
+static inline Uint32 SDL_GetTicks(void) { return 0; }
+static inline void SDL_Delay(Uint32 ms) {}
+static inline const char* SDL_GetError(void) { return ""; }
+static inline int SDL_LockTexture(SDL_Texture* texture, const void* rect, void** pixels, int* pitch) { return 0; }
+static inline void SDL_UnlockTexture(SDL_Texture* texture) {}
+static inline void SDL_DestroyTexture(SDL_Texture* texture) {}
+static inline int SDL_SetHint(const char* name, const char* value) { return 0; }
+static inline Uint32 SDL_GetModState(void) { return 0; }
+static inline const char* SDL_GetKeyName(Uint32 key) { return ""; }
+static inline int SDL_CaptureMouse(int enabled) { return 0; }
+static inline int SDL_NumJoysticks(void) { return 0; }
+static inline SDL_Joystick* SDL_JoystickOpen(int device_index) { return NULL; }
+static inline const char* SDL_JoystickName(SDL_Joystick* joystick) { return ""; }
+static inline int SDL_JoystickEventState(int state) { return 0; }
+static inline int SDL_NumHaptics(void) { return 0; }
+static inline SDL_Haptic* SDL_HapticOpen(int device_index) { return NULL; }
+static inline SDL_Haptic* SDL_HapticOpenFromJoystick(SDL_Joystick* joystick) { return NULL; }
+static inline int SDL_HapticRumbleSupported(SDL_Haptic* haptic) { return 0; }
+static inline int SDL_HapticRumbleInit(SDL_Haptic* haptic) { return 0; }
+static inline int SDL_HapticRumblePlay(SDL_Haptic* haptic, float strength, Uint32 length) { return 0; }
+static inline void SDL_HapticRumbleStop(SDL_Haptic* haptic) {}
+static inline int SDL_OpenAudio(SDL_AudioSpec* desired, SDL_AudioSpec* obtained) { return 0; }
+static inline void SDL_PauseAudio(int pause_on) {}
+static inline void* SDL_memset(void* dst, int c, size_t len) { return memset(dst, c, len); }
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -5221,7 +5294,7 @@ LAB_00120000:
             uVar28 = uVar28 + uVar9 * -2;
             puVar26 = puVar17;
             do {
-              uVar7 = (*(code *)pauVar34)(lVar30,(uVar31 + (int)puVar17) - (int)puVar26 & *puVar1);
+              uVar7 = ((undefined2 (*)(long, ulong))pauVar34)(lVar30,(uVar31 + (int)puVar17) - (int)puVar26 & *puVar1);
               puVar39 = puVar26 + -1;
               *puVar26 = uVar7;
               puVar26 = puVar39;
@@ -5234,7 +5307,7 @@ LAB_00120000:
               uVar8 = memory_check_code_region(lVar14,uVar15,uVar28,uVar9 * 2);
               local_30 = local_30 | uVar8;
             }
-            auVar40 = _DAT_0021d610;
+            memcpy(auVar40, _DAT_0021d610, 16);
             uVar8 = uVar9 - 1;
             uVar31 = uVar31 + uVar9 * 2;
             uVar28 = uVar28 + uVar9 * -2;
@@ -5282,7 +5355,11 @@ LAB_00120000:
           }
           if (local_38 == 0) goto LAB_001212a8;
         }
-        pauVar34 = (undefined1 (*) [16])(**(code **)(puVar1 + 2))(lVar30,uVar31);
+        {
+          code2* func_ptr = *(code2 **)(puVar1 + 2);
+          void* result = (void*)(long)func_ptr(lVar30, uVar31);
+          pauVar34 = (undefined1 (*) [16])result;
+        }
         uVar10 = 0;
         iVar24 = 2;
 LAB_0011ffe0:
@@ -5297,9 +5374,9 @@ LAB_0011ffec:
           }
           goto LAB_00120000;
         }
-        pcVar33 = *(code **)(puVar2 + 10);
-        lVar14 = (**(code **)(puVar2 + 0x12))(lVar30,puVar2,uVar28);
-        uVar15 = (**(code **)(puVar2 + 0x14))(lVar30,puVar2,uVar28);
+        code_store_func pcVar35_store = (code_store_func)(void*)*(code **)(puVar2 + 10);
+        lVar14 = ((long (*)(long, void*, ulong))*(code **)(puVar2 + 0x12))(lVar30,puVar2,uVar28);
+        uVar15 = ((ulong (*)(long, void*, ulong))*(code **)(puVar2 + 0x14))(lVar30,puVar2,uVar28);
         local_38 = local_38 - uVar9;
         if (iVar24 == 2) {
           iVar24 = uVar9 * 2;
@@ -5310,7 +5387,7 @@ LAB_0011ffec:
           pauVar21 = pauVar34;
           do {
             puVar4 = *pauVar21;
-            (*pcVar33)(lVar30,(uVar28 + (int)pauVar34) - (int)pauVar21 & *puVar2,
+            (*pcVar35_store)(lVar30,(uVar28 + (int)pauVar34) - (int)pauVar21 & *puVar2,
                        *(undefined2 *)*pauVar21);
             pauVar21 = (undefined1 (*) [16])(puVar4 + 2);
           } while ((undefined1 (*) [16])(*pauVar34 + (ulong)(uVar9 - 1) * 2 + 2) !=
@@ -5324,8 +5401,8 @@ LAB_0011ffec:
           uVar8 = uVar9;
           uVar10 = uVar31;
           do {
-            uVar11 = (*(code *)pauVar34)(lVar30,uVar10 & *puVar1);
-            (*pcVar33)(lVar30,(uVar31 + uVar28) - uVar10 & *puVar2,uVar11);
+            uVar11 = ((undefined2 (*)(long, ulong))pauVar34)(lVar30,uVar10 & *puVar1);
+            (*pcVar35_store)(lVar30,(uVar31 + uVar28) - uVar10 & *puVar2,uVar11);
             uVar10 = uVar10 + 2;
             uVar8 = uVar8 - 1;
           } while (uVar8 != 0);
@@ -6082,7 +6159,7 @@ LAB_00120378:
               uVar9 = (uVar12 >> 2) + 1;
             }
             if (cVar6 == '\x01') {
-              pauVar34 = (undefined1 (*) [16])(**(code **)(puVar1 + 2))(lVar30,uVar31);
+              pauVar34 = (undefined1 (*) [16])((void*)(long)((*(code2 **)(puVar1 + 2))(lVar30,uVar31)));
               iVar24 = 2;
               uVar10 = 0;
             }
@@ -13381,9 +13458,9 @@ LAB_00130cbc:
     *(undefined4 *)(param_1 + 0x444) = 0;
     if (param_2 == 0xbf && sVar2 == 0) goto LAB_00130cbc;
   }
-  video_2d_render_scanlines(param_1 + 0x5cf,sVar2,param_2);
-  uVar4 = video_2d_render_scanlines
-                    (param_1 + 0x10853,*(undefined2 *)((long)param_1 + 0x458894),param_2,0);
+  video_2d_render_scanlines(param_1 + 0x5cf,sVar2,param_2,0);
+  video_2d_render_scanlines(param_1 + 0x10853,*(undefined2 *)((long)param_1 + 0x458894),param_2,0);
+  uVar4 = 0;
   *(short *)((long)param_1 + 0x458894) = (short)param_2 + 1;
   return uVar4;
 }
