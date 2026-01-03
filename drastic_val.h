@@ -8,6 +8,15 @@
 extern "C" {
 #endif
 typedef unsigned char   undefined;
+// 前向声明类型
+typedef unsigned long ulong;
+typedef unsigned int uint;
+typedef unsigned char undefined;
+typedef unsigned char undefined1;
+typedef unsigned short undefined2;
+typedef unsigned int undefined4;
+typedef unsigned long undefined8;
+
 typedef void (*code)(void);  // 函数指针类型（无参数）
 typedef void (*code1)(long);  // 函数指针类型（1个参数）
 typedef void (*code2)(long, ulong);  // 函数指针类型（2个参数）
@@ -1696,7 +1705,7 @@ undefined tilde_bad_alloc;
 // 系统已经定义了 memchr 函数，跳过
 // undefined memchr; // 注释掉，避免冲突
 #else
-undefined memchr;
+// undefined memchr; // 注释掉，避免与标准库冲突
 #endif // __GLIBC__
 int DAT_004faf74;
 undefined DAT_004faf80;

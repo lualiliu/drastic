@@ -1546,7 +1546,7 @@ LAB_00126968:
 
 // --- 函数实现: execute_arm_alu_op ---
 
-void execute_arm_set_cpsr(long param_1,uint param_2)
+static inline void execute_arm_set_cpsr(long param_1,uint param_2)
 
 {
   long lVar1;
@@ -2010,7 +2010,7 @@ LAB_0012659c:
 }
 
 
-void execute_arm_mrs_op(long param_1,ulong param_2)
+static inline void execute_arm_mrs_op(long param_1,ulong param_2)
 
 {
   ulong uVar1;
@@ -2289,7 +2289,7 @@ LAB_001250c4:
 
 // --- 函数实现: execute_arm_coprocessor_register_transfer_op ---
 
-void coprocessor_register_store(long *param_1,int param_2,int param_3,int param_4,ulong param_5)
+static inline void coprocessor_register_store(long *param_1,int param_2,int param_3,int param_4,ulong param_5)
 
 {
   bool bVar1;
