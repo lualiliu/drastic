@@ -8,10 +8,17 @@
 extern "C" {
 #endif
 typedef unsigned char   undefined;
+// 先定义基础类型
+typedef unsigned long    ulong;
+typedef unsigned int    uint;
+typedef unsigned char    uchar;
+typedef unsigned short    ushort;
+typedef unsigned long long    ulonglong;
+// 然后定义函数指针类型
 typedef void (*code)(void);  // 函数指针类型（无参数）
 typedef void (*code1)(long);  // 函数指针类型（1个参数）
 typedef void (*code2)(long, ulong);  // 函数指针类型（2个参数）
-typedef int (*code3)(long, long, long);  // 函数指针类型（2个参数）
+typedef int (*code3)(long, long, long);  // 函数指针类型（3个参数）
 // CONCAT 宏定义（用于字符/值连接，反编译代码中的特殊操作）
 // 这些宏是嵌套调用的，每个宏接受2个参数，其中第二个参数可能是另一个CONCAT调用
 #define CONCAT11(a, b) ((char)((a) | (b)))
@@ -36,10 +43,7 @@ typedef unsigned char    dwfenc;
 typedef unsigned int    dword;
 typedef long long    longlong;
 typedef unsigned long    qword;
-typedef unsigned char    uchar;
-typedef unsigned int    uint;
-typedef unsigned long    ulong;
-typedef unsigned long long    ulonglong;
+// ulong, uint, uchar, ushort, ulonglong 已在上面定义
 typedef unsigned char    undefined1;
 typedef unsigned short    undefined2;
 typedef unsigned int    undefined4;
@@ -316,6 +320,7 @@ typedef struct ui_st UI;
 #ifndef _PTHREAD_TYPES_DEFINED
 #ifdef __GLIBC__
 // 系统已经定义了 pthread 类型，跳过
+#include <pthread.h>
 typedef pthread_mutex_t pthread_mutex_t, *Ppthread_mutex_t;
 #else
 #define _PTHREAD_TYPES_DEFINED

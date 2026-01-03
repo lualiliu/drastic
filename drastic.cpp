@@ -1,3 +1,6 @@
+// drastic.cpp - 主源文件（包含所有函数实现）
+// 注意：部分函数已迁移到模块文件中，但为了向后兼容，保留所有函数
+
 // 先包含标准库头文件
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +20,7 @@
 #include "drastic_val.h"
 #include "drastic_functions.h"
 #include "drastic_cpu.h"
+#include "drastic_modules.h"
 // 确保SDL2类型可用
 #include <SDL2/SDL.h>
 // SDL_Rect 前向声明（如果SDL.h中没有定义）
@@ -25,12 +29,6 @@ struct SDL_Rect {
   int x, y, w, h;
 };
 #endif
-// 包含标准库（在自定义头文件之后）
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <setjmp.h>
-#include <stdarg.h>
 
 // 声明缺失的函数
 extern "C" {
@@ -45,183 +43,10 @@ int __snprintf_chk(char* str, size_t maxlen, int flag, size_t strlen, const char
 }
 
 
-int main(int param_1, char** param_2)
-
-{
-  int iVar1;
-  undefined8 uVar2;
-  
-  printf("Starting DraStic (version %s)\n\n","r2.5.2.2");
-  *(undefined8*)(nds_system + 0x57482784) = 0xffffffffffffffff;
-  initialize_system((long)nds_system);
-  //process_arguments((long)nds_system,param_1,param_2);
-  initialize_screen(*(uint*)(nds_system + 0x3b2a9a9));
-  if (param_1 < 2) {
-    menu((long)nds_system,1);
-  }
-  else {
-    uVar2 = *(undefined8 *)(param_2 + (long)param_1 * 8 + -8);
-    printf("Loading gamecard file %s.\n",(char*)uVar2);
-    iVar1 = load_nds(0x4fc320,(char*)uVar2);
-    if (iVar1 != 0) {
-      puts("Gamecard load failed.");
-      return 0xffffffff;
-    }
-    set_screen_menu_off();
-    reset_system((undefined8)nds_system);
-  }
-  _setjmp((__jmp_buf_tag *)(nds_system + 0x3b2a840));
-  if (nds_system[0x3b2a9a8] == '\0') {
-    cpu_next_action_arm7_to_event_update((long)nds_system);
-  }
-  else {
-    printf("Calling recompiler event update handler (@ %p).\n",*(void**)(nds_system + 0x22847464));
-    printf("Memory map offset %p, translate cache pointer %p\n",*(void**)(nds_system + 0x57482784),
-                 (void*)0x588000);
-    //recompiler_entry((long)nds_system,*(undefined8*)(nds_system + 0x57482784));
-    cpu_next_action_arm7_to_event_update((long)nds_system);
-  }
-  return 0;
-}
+// main函数已移至main.cpp
 
 // --- 函数: load_nds ---
-
-undefined4 load_nds(long param_1,char *param_2)
-
-{
-  long lVar1;
-  undefined1 *puVar2;
-  int iVar3;
-  ::FILE *__s;
-  size_t sVar4;
-  long lVar5;
-  char *pcVar6;
-  char *pcVar7;
-  undefined4 uVar8;
-  long lVar9;
-  undefined *puVar10;
-  char acStack_c48 [1056];
-  undefined1 auStack_828 [2080];
-  long local_8;
-  
-  lVar9 = *(long *)(param_1 + 0x918);
-  local_8 = (long)__stack_chk_guard;
-  lVar1 = lVar9 + 0x8a780;
-  snprintf((char*)auStack_828,0x820,"%s%cunzip_cache",(char*)lVar1,0x2f);
-  puVar2 = auStack_828;
-  if (*(int *)(lVar9 + 0x85a24) == 0) {
-    puVar2 = (undefined1 *)0x0;
-  }
-  if (*(long *)(param_1 + 0x920) == 0) {
-LAB_0016fe48:
-    lVar5 = (long)nds_file_open(param_2,(long)puVar2,*(int *)(lVar9 + 0x85a3c),
-                          *(int *)(lVar9 + 0x85a28));
-  }
-  else {
-    if (*(int *)(param_1 + 0x2d84) == 0) {
-      iVar3 = *(int *)(param_1 + 0x8dc);
-    }
-    else {
-      backup_save(param_1 + 0x968);
-      iVar3 = *(int *)(param_1 + 0x8dc);
-    }
-    if (((iVar3 != 0) && (*(char *)(param_1 + 0x8e3) != '\0')) && (*(long *)(param_1 + 0x8c8) != 0))
-    {
-      __s = ::fopen((char *)(param_1 + 0x4a0),"wb");
-      if (__s == (::FILE *)0x0) {
-        printf("ERROR: Couldn\'t save GBA backup %s\n",(char *)(param_1 + 0x4a0));
-      }
-      else {
-        puts("Saving GBA backup file.");
-        sVar4 = fwrite(*(void **)(param_1 + 0x8c8),(ulong)*(uint *)(param_1 + 0x8d4),1,__s);
-        if (sVar4 != 1) {
-          puts("ERROR: Couldn\'t write all of GBA backup.");
-        }
-        fclose(__s);
-      }
-    }
-    free(*(void **)(param_1 + 0x2d90));
-    *(undefined8 *)(param_1 + 0x2d90) = 0;
-    nds_file_close(*(undefined8 *)(param_1 + 0x920));
-    *(undefined8 *)(param_1 + 0x920) = 0;
-    if (*(int *)(param_1 + 0x93c) < 0) goto LAB_0016fe48;
-    close(*(int *)(param_1 + 0x93c));
-    lVar5 = (long)nds_file_open(param_2,(long)puVar2,*(int *)(lVar9 + 0x85a3c),
-                          *(int *)(lVar9 + 0x85a28));
-  }
-  if ((lVar5 == 0) &&
-     ((*(int *)(lVar9 + 0x85a24) != 0 ||
-      (lVar5 = (long)nds_file_open(param_2,(long)auStack_828,*(int *)(lVar9 + 0x85a3c),
-                             *(int *)(lVar9 + 0x85a28)), lVar5 == 0)))) {
-    uVar8 = 0xffffffff;
-    printf("ERROR: Could not open %s\n",param_2);
-    goto LAB_0016ff3c;
-  }
-  *(long *)(param_1 + 0x920) = lVar5;
-  if (*(uint *)(lVar5 + 0x10) < 0x200) {
-    uVar8 = 0xffffffff;
-    printf("%s does not have a valid gamecard_header.\n",param_2);
-    goto LAB_0016ff3c;
-  }
-  pcVar6 = strrchr(param_2,0x2f);
-  pcVar7 = param_2;
-  if (pcVar6 != (char *)0x0) {
-    pcVar7 = pcVar6 + 1;
-  }
-  pcVar7 = strncpy(acStack_c48,pcVar7,0x400);
-  pcVar7 = strrchr(pcVar7,0x2e);
-  if (pcVar7 != (char *)0x0) {
-    *pcVar7 = '\0';
-  }
-  strncpy((char *)(lVar9 + 0x8a380),param_2,0x400);
-  *(undefined1 *)(lVar9 + 0x8a77f) = 0;
-  pcVar6 = strrchr(param_2,0x2f);
-  pcVar7 = (char *)(lVar9 + 0x8b380);
-  if (pcVar6 != (char *)0x0) {
-    param_2 = pcVar6 + 1;
-  }
-  strncpy(pcVar7,param_2,0x400);
-  *(undefined1 *)(lVar9 + 0x8b77f) = 0;
-  memcpy((void *)(lVar9 + 0x8af80),pcVar7,0x400);
-  pcVar6 = strrchr(pcVar7,0x2e);
-  if (pcVar6 != (char *)0x0) {
-    *pcVar6 = '\0';
-  }
-  pcVar6 = getcwd((char *)(lVar9 + 0x855e4),0x400);
-  if (pcVar6 == (char *)0x0) {
-    uVar8 = 0xffffffff;
-    goto LAB_0016ff3c;
-  }
-  if (*(int *)(lVar9 + 0x85a50) == 0) {
-LAB_0016ff38:
-    uVar8 = 0;
-  }
-  else {
-    /*
-    puVar10 = (undefined*)&DAT_0021f028;
-    snprintf((char*)auStack_828,0x820,"%s%c%s%c%s.%s",(char*)lVar1,0x2f,"scripts",0x2f,pcVar7,(char*)&DAT_0021f028
-                 );
-    printf("Attempting to load lua script %s\n",(char*)auStack_828);
-    iVar3 = lua_load_script((long)auStack_828);
-    if (iVar3 != 0) {
-      snprintf((char*)auStack_828,0x820,"%s%c%s%cdefault.%s",(char*)lVar1,0x2f,"scripts",0x2f,(char*)&DAT_0021f028
-                    ,(char*)puVar10);
-      printf("Attempting to load lua script %s\n",(char*)auStack_828);
-      iVar3 = lua_load_script((long)auStack_828);
-      if (iVar3 != 0) goto LAB_0016ff38;
-    }
-    uVar8 = 0;
-    printf("Using lua script %s\n",(char*)auStack_828);
-    lua_on_load_game((undefined8)pcVar7);
-    */
-  }
-LAB_0016ff3c:
-  if (local_8 != (long)__stack_chk_guard) {
-                    
-    __stack_chk_fail();
-  }
-  return uVar8;
-}
+// 已移至 file.cpp 模块
 
 // --- 函数: initialize_screen ---
 
