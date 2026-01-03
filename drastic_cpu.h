@@ -74,7 +74,7 @@ static inline void cpu_next_action_arm9_to_arm7_impl(long param_1)
 
 // --- 函数实现: _execute_cpu ---
 
-void _execute_cpu(long param_1)
+static inline void _execute_cpu(long param_1)
 
 {
   uint uVar1;
@@ -909,7 +909,7 @@ static inline uint execute_arm_condition(long param_1,ulong param_2)
 
 // WARNING: Type propagation algorithm not settling
 
-void execute_arm_undefined_or_thumb_ext_op(long param_1,ulong param_2)
+static inline void execute_arm_undefined_or_thumb_ext_op(long param_1,ulong param_2)
 
 {
   uint uVar1;
@@ -978,7 +978,7 @@ LAB_001272a0:
   return;
 }
 
-ulong execute_arm_instruction(long param_1,ulong param_2)
+static inline ulong execute_arm_instruction(long param_1,ulong param_2)
 
 {
   long lVar1;
@@ -1371,7 +1371,7 @@ LAB_00127778:
 
 // --- 函数实现: execute_arm_branch_op ---
 
-void execute_arm_branch_op(long param_1,ulong param_2)
+static inline void execute_arm_branch_op(long param_1,ulong param_2)
 
 {
   int iVar1;
@@ -1635,7 +1635,7 @@ LAB_001257a0:
   return;
 }
 
-void execute_arm_alu_op(long param_1,ulong param_2,uint param_3)
+static inline void execute_arm_alu_op(long param_1,ulong param_2,uint param_3)
 
 {
   uint uVar1;
@@ -2029,7 +2029,7 @@ static inline void execute_arm_mrs_op(long param_1,ulong param_2)
 // --- 函数实现: execute_arm_saturating_alu_op ---
 
 
-void execute_arm_saturating_alu_op(long param_1,ulong param_2)
+static inline void execute_arm_saturating_alu_op(long param_1,ulong param_2)
 
 {
   int iVar1;
@@ -2078,7 +2078,7 @@ joined_r0x00126e98:
 }
 // --- 函数实现: execute_arm_raise_exception ---
 
-void execute_arm_raise_exception(long param_1,uint param_2)
+static inline void execute_arm_raise_exception(long param_1,uint param_2)
 
 {
   uint uVar1;
@@ -2439,7 +2439,7 @@ LAB_0012716c:
 
 // --- 函数实现: execute_arm_alu_load_op2_reg ---
 
-ulong execute_arm_alu_load_op2_reg(long param_1,ulong param_2)
+static inline ulong execute_arm_alu_load_op2_reg(long param_1,ulong param_2)
 
 {
   uint uVar1;

@@ -14,8 +14,21 @@
 #include <getopt.h>
 
 // 包含自定义头文件
+// 在drastic.cpp中定义全局变量
+#define DRASTIC_VAL_IMPLEMENTATION
 #include "drastic_val.h"
+
 #include "drastic_functions.h"
+
+// 定义drastic_functions.h中声明的全局变量
+uint uRam0000000000000048;
+long lRam0000000000000038;
+long lRam0000000000000040;
+undefined1 _DAT_0021d610[16];
+undefined1 _DAT_0021d600[16];
+
+// 定义带初始化的全局变量（在drastic_val.h中已声明，这里提供初始化）
+undefined __stack_chk_guard = 0;
 #include "drastic_cpu.h"
 // 确保SDL2类型可用
 #include <SDL2/SDL.h>
