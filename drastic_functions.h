@@ -96,12 +96,49 @@ typedef undefined2 (*code_load_func)(long, uint);  // 加载函数指针类型
 typedef void (*code_store_func)(long, uint, undefined2);  // 存储函数指针类型
 typedef long (*code_func_long)(long, long, ulong);  // 返回long的函数指针类型（3个参数）
 typedef ulong (*code_func_ulong)(long, long, ulong);  // 返回ulong的函数指针类型（3个参数）
+typedef void (*code_menu_action)(long*, long, int);  // 菜单动作函数指针类型（3个参数：long*, long, int）
 
 // ==================== 函数声明 ====================
+
+// glibc 安全检查函数
+void __stack_chk_fail(void);
+int __sprintf_chk(char *str, int flag, size_t strlen, const char *format, ...);
 
 // void __thiscall StringList:: AddString(StringList this, wchar_t param_1); // 注释掉，语法错误
 
 // ========== 前向声明 ==========
+// 平台和屏幕相关函数
+void platform_set_default_controls(undefined8 *param_1, undefined8 *param_2);
+void set_screen_orientation(undefined4 param_1);
+void set_screen_swap(undefined4 param_1);
+void clear_screen_menu(undefined2 param_1);
+void blit_screen_menu(long param_1, ulong param_2, int param_3, uint param_4, int param_5);
+void set_font_narrow_small(void);
+void set_font_wide(void);
+ulong savestate_index_timestamp(long param_1, undefined4 param_2);
+void print_string(undefined8 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5);
+int action_select_menu(long param_1, long param_2, int *param_3);
+void destroy_select_menu(undefined8 param_1, long param_2);
+void focus_savestate(void);
+void modify_snapshot_bg(void);
+void select_save_state(long *param_1);
+void select_quit(undefined8 *param_1);
+undefined4 platform_get_config_input(void);
+undefined4 load_nds(long param_1, char* param_2);
+// 菜单相关函数前向声明
+void draw_menu_controls(long *param_1, long param_2);
+void focus_menu_none(void);
+void draw_button_config(long param_1, undefined8 *param_2, int param_3);
+uint action_button_config(long param_1, long param_2, uint *param_3);
+void select_restore_default_controls(long param_1);
+void select_delete_config_local(long *param_1);
+void select_save_config_global(long *param_1);
+void select_save_config_local(long *param_1);
+void draw_input(long param_1, undefined8 *param_2, int param_3);
+uint action_input(long param_1, long param_2, uint *param_3);
+void draw_numeric_labeled(long param_1, undefined8 *param_2, int param_3);
+void draw_menu_firmware(long *param_1, long param_2);
+void draw_menu_options(undefined8 param_1, long param_2);
 
 // 注意：以下函数在 drastic_val.h 中已声明为 extern undefined（函数指针），
 // 因此不在此处重复声明，只提供函数定义
@@ -143,7 +180,7 @@ void config_default(undefined4 *param_1)
   ushort *puVar4;
   ulong uVar5;
   
-  lVar3 = ___stack_chk_guard;
+  lVar3 = __stack_chk_guard;
   puVar4 = (ushort *)((long)param_1 + 0xd1e);
   puts("Setting default configuration.");
   *(undefined8 *)(param_1 + 0xd) = 0x100000001;
@@ -202,7 +239,7 @@ void config_default(undefined4 *param_1)
   *(undefined8 *)((long)param_1 + 0xd5e) = 0xffffffffffffffff;
   *(undefined8 *)((long)param_1 + 0xd66) = 0xffffffffffffffff;
   *(undefined2 *)((long)param_1 + 0xd6e) = 0xffff;
-  platform_set_default_controls(param_1 + 0x333,puVar4);
+  platform_set_default_controls((undefined8 *)(param_1 + 0x333),(undefined8 *)puVar4);
   set_screen_orientation(param_1[0x113]);
   set_screen_swap(param_1[0x115]);
   memset(__s,0,0x4000);
@@ -220,10 +257,10 @@ void config_default(undefined4 *param_1)
     uVar5 = (ulong)uVar1;
     puVar4 = puVar4 + 1;
   } while (uVar1 != 0x29);
-  if (lVar3 - ___stack_chk_guard == 0) {
+  if (lVar3 - __stack_chk_guard == 0) {
     return;
   }
-  __stack_chk_fail(lVar3 - ___stack_chk_guard,0);
+  __stack_chk_fail();
 }
 undefined4 coprocessor_register_load(long param_1,int param_2,int param_3,int param_4);
 int cpu_print_profiler_results(void);
@@ -240,8 +277,8 @@ void draw_menu_bg(undefined8 *param_1)
   long local_10;
   long local_8;
   
-  local_8 = ___stack_chk_guard;
-  clear_screen_menu(0,&__stack_chk_guard,0);
+  local_8 = __stack_chk_guard;
+  clear_screen_menu(0);
   if (param_1[7] != 0) {
     uVar2 = 0x24;
     if (*(int *)(param_1 + 8) == 0) {
@@ -269,10 +306,10 @@ void draw_menu_bg(undefined8 *param_1)
       set_font_wide();
     }
   }
-  if (local_8 - ___stack_chk_guard == 0) {
+  if (local_8 - __stack_chk_guard == 0) {
     return;
   }
-  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+  __stack_chk_fail();
 }
 // void draw_menu_main(void);  // 已在 drastic_val.h 中声明
 // void event_timer_overflow_function(long param_1,long *param_2);  // 已在 drastic_val.h 中声明
@@ -314,7 +351,7 @@ void load_logo(long *param_1)
   long local_8;
   
   lVar3 = *param_1;
-  local_8 = ___stack_chk_guard;
+  local_8 = __stack_chk_guard;
   tVar1 = time((time_t *)0x0);
   __sprintf_chk(acStack_428,1,0x420,"%s%cdrastic_logo_%d.raw",lVar3 + 0x8a780,0x2f,(uint)tVar1 & 1);
   __stream = fopen(acStack_428,"rb");
@@ -331,10 +368,10 @@ void load_logo(long *param_1)
     }
     fclose(__stream);
   }
-  if (local_8 - ___stack_chk_guard == 0) {
+  if (local_8 - __stack_chk_guard == 0) {
     return;
   }
-  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+  __stack_chk_fail();
 }
 undefined4 luaL_loadfilex(undefined8 param_1,char *param_2,undefined8 param_3);
 uint lua_getglobal(long param_1,undefined8 param_2);
@@ -755,12 +792,11 @@ LAB_00187d24:
   return;
 }
 
-void print_string(undefined8 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+void print_string(undefined8 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5)
 
 {
   undefined4 uVar1;
   long lVar2;
-  undefined4 param_5 = 0;
   lVar2 = get_screen_ptr(0);
   if ((lVar2 == 0) && (lVar2 = get_screen_ptr(1), lVar2 == 0)) {
     return;
@@ -789,7 +825,7 @@ void draw_numeric(long param_1,undefined8 *param_2,int param_3)
   if (param_3 != 0) {
     uVar2 = 0x17;
   }
-  print_string(auStack_108,0xffff,uVar2,*(undefined4 *)(*(long *)(param_1 + 0x10) + 0x10));
+  print_string(auStack_108,0xffff,uVar2,*(undefined4 *)(*(long *)(param_1 + 0x10) + 0x10),0);
   if (local_8 - __stack_chk_guard == 0) {
     return;
   }
@@ -937,8 +973,8 @@ void select_load_game(long *param_1)
   undefined1 auStack_428 [1056];
   long local_8;
   
-  local_8 = ___stack_chk_guard;
-  iVar2 = load_file(param_1,&nds_ext,auStack_428);
+  local_8 = __stack_chk_guard;
+  iVar2 = load_file(param_1,(long*)&nds_ext,auStack_428);
   if (iVar2 != -1) {
     lVar3 = *param_1;
     iVar2 = load_nds(lVar3 + 800,auStack_428);
@@ -949,10 +985,10 @@ void select_load_game(long *param_1)
       *(undefined4 *)(param_1 + 10) = uVar1;
     }
   }
-  if (local_8 - ___stack_chk_guard == 0) {
+  if (local_8 - __stack_chk_guard == 0) {
     return;
   }
-  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+  __stack_chk_fail();
 }
 
 void select_cheat_menu(long *param_1)
@@ -983,7 +1019,7 @@ void draw_menu_option(long param_1,undefined8 *param_2,int param_3)
   if (param_3 != 0) {
     uVar1 = 0x17;
   }
-  print_string(*param_2,0xffff,uVar1,*(undefined4 *)(*(long *)(param_1 + 0x10) + 0x10));
+  print_string(*param_2,0xffff,uVar1,*(undefined4 *)(*(long *)(param_1 + 0x10) + 0x10),0);
   return;
 }
 
@@ -991,13 +1027,13 @@ void clear_screen(void)
 {
   undefined4 local_28;
   undefined4 uStack_24;
-  undefined1 auStack_20 [4];
+  undefined1 auStack_20[64];  // SDL_DisplayMode 大小，使用固定大小避免不完整类型错误
   undefined4 local_1c;
   undefined4 uStack_18;
   long local_8;
   
-  local_8 = ___stack_chk_guard;
-  SDL_GetCurrentDisplayMode(0,auStack_20,0);
+  local_8 = __stack_chk_guard;
+  SDL_GetCurrentDisplayMode(0,(SDL_DisplayMode*)auStack_20);
   SDL_RenderGetLogicalSize(DAT_04031578,&local_28,&uStack_24);
   SDL_RenderSetLogicalSize(DAT_04031578,local_1c,uStack_18);
   SDL_SetRenderDrawColor(DAT_04031578,0,0,0,0xffffffff);
@@ -1010,10 +1046,10 @@ void clear_screen(void)
   SDL_RenderClear(DAT_04031578);
   SDL_RenderPresent(DAT_04031578);
   SDL_RenderSetLogicalSize(DAT_04031578,local_28,uStack_24);
-  if (local_8 - ___stack_chk_guard == 0) {
+  if (local_8 - __stack_chk_guard == 0) {
     return;
   }
-  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+  __stack_chk_fail();
 }
 
 void clear_screen_menu(undefined2 param_1)
@@ -1068,8 +1104,8 @@ ulong convert_thumb_instruction_to_arm(ulong param_1,undefined4 *param_2)
   int local_50 [18];
   long local_8;
   
-  lVar2 = ___stack_chk_guard;
-  local_8 = ___stack_chk_guard;
+  lVar2 = __stack_chk_guard;
+  local_8 = __stack_chk_guard;
   uVar4 = 0;
   *param_2 = 0;
   uVar6 = (uint)(param_1 >> 0xd) & 7;
@@ -1325,8 +1361,8 @@ LAB_00129434:
     uVar6 = (uVar3 >> 6 & 0x1f) << 7 | uVar6 << 5 | (uVar3 & 7) << 0xc | (uint)uVar4 | 0xe1b00000;
   }
 LAB_00129050:
-  if (lVar2 - ___stack_chk_guard != 0) {
-    __stack_chk_fail(uVar6,lVar2 - ___stack_chk_guard,0,&__stack_chk_guard,uVar4);
+  if (lVar2 - __stack_chk_guard != 0) {
+    __stack_chk_fail();
   }
   return uVar6;
 }
@@ -1339,12 +1375,12 @@ void convert_touch_coordinates(int param_1, int param_2, uint *param_3, uint *pa
   uint uVar4;
   
   uVar1 = 0;
-  if (_DAT_040315bc != 0) {
-    uVar1 = (uint)(param_1 * _DAT_040315b4) / _DAT_040315bc;
+  if (DAT_040315bc != 0) {
+    uVar1 = (uint)(param_1 * DAT_040315b4) / DAT_040315bc;
   }
   uVar2 = 0;
-  if (_DAT_040315c0 != 0) {
-    uVar2 = (uint)(param_2 * _DAT_040315b8) / _DAT_040315c0;
+  if (DAT_040315c0 != 0) {
+    uVar2 = (uint)(param_2 * DAT_040315b8) / DAT_040315c0;
   }
   uVar4 = uVar1 - *(int *)(&DAT_04031530 + (ulong)((uint)DAT_040315cc ^ 1) * 5);
   uVar3 = uVar2 - *(int *)((long)&DAT_04031530 + (ulong)((uint)DAT_040315cc ^ 1) * 0x28 + 4);
@@ -3343,7 +3379,7 @@ void destroy_select_menu(undefined8 param_1,long param_2)
   free(__ptr);
   return;
 }
-void savestate_index_timestamp(long param_1,undefined4 param_2);
+// void savestate_index_timestamp(long param_1,undefined4 param_2); // 已在前面声明为 ulong，删除此重复声明
 
 void schedule_event(long param_1, uint param_2, ulong param_3);
 
@@ -11505,7 +11541,7 @@ LAB_00130e24:
         frames_total_11417 = 0;
         frames_rendered_11416 = 0;
       }
-      print_string((undefined8)(ulong)print_buffer_11412,0xffff,0,0);
+      print_string((undefined8)(ulong)print_buffer_11412,0xffff,0,0,0);
     }
     if ((char)param_1[0x5e6] == '\0') {
       bVar3 = true;
@@ -14189,7 +14225,7 @@ void draw_menu_controls(long *param_1,long param_2)
   long local_8;
   
   lVar1 = *param_1;
-  local_8 = ___stack_chk_guard;
+  local_8 = __stack_chk_guard;
   platform_print_code(auStack_148,*(undefined2 *)(lVar1 + 0x862ba));
   platform_print_code(auStack_128,*(undefined2 *)(lVar1 + 0x862be));
   print_string("Configure Controls",0xffff,0,*(int *)(param_2 + 0x10) + 0x10,0xe0);
@@ -14197,10 +14233,10 @@ void draw_menu_controls(long *param_1,long param_2)
   print_string(auStack_108,0x600,0,*(int *)(param_2 + 0x10) + 0x10,0xe8);
   __sprintf_chk(auStack_108,1,0x100,"%s: Unmap",auStack_128);
   print_string(auStack_108,0x17,0,*(int *)(param_2 + 0x10) + 0xd0,0xe8);
-  if (local_8 - ___stack_chk_guard == 0) {
+  if (local_8 - __stack_chk_guard == 0) {
     return;
   }
-  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+  __stack_chk_fail();
 }
 
 void focus_menu_none(void)
@@ -14221,7 +14257,7 @@ void draw_button_config(long param_1,undefined8 *param_2,int param_3)
   long local_8;
   
   iVar1 = *(int *)(*(long *)(param_1 + 0x10) + 0x10);
-  local_8 = ___stack_chk_guard;
+  local_8 = __stack_chk_guard;
   sVar3 = strlen((char *)*param_2);
   platform_print_code(auStack_48,*(undefined2 *)param_2[7]);
   platform_print_code(auStack_28,*(undefined2 *)param_2[8]);
@@ -14243,10 +14279,10 @@ void draw_button_config(long param_1,undefined8 *param_2,int param_3)
   iVar2 = ((int)sVar3 + 1) * 8;
   print_string(auStack_48,0xffff,uVar5,iVar2 + iVar1,*(int *)(param_2 + 1) << 3);
   print_string(auStack_28,0xffff,uVar6,iVar2 + 0x78 + iVar1,*(int *)(param_2 + 1) << 3);
-  if (local_8 - ___stack_chk_guard == 0) {
+  if (local_8 - __stack_chk_guard == 0) {
     return;
   }
-  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+  __stack_chk_fail();
 }
 
 uint action_button_config(long param_1,long param_2,uint *param_3)
@@ -14306,14 +14342,14 @@ void select_delete_config_local(long *param_1)
   long local_8;
   
   lVar1 = *param_1;
-  local_8 = ___stack_chk_guard;
+  local_8 = __stack_chk_guard;
   if (*(char *)(lVar1 + 0x8b380) != '\0') {
     __sprintf_chk(acStack_828,1,0x820,"%s%cconfig%c%s.cfg",lVar1 + 0x8ab80,0x2f,0x2f,lVar1 + 0x8b380);
     unlink(acStack_828);
   }
   lVar1 = param_1[2];
-  if (*(code **)(lVar1 + 8) != (code *)0x0) {
-    (**(code **)(lVar1 + 8))(param_1,lVar1,1);
+  if (*(code_menu_action *)(lVar1 + 8) != (code_menu_action)0x0) {
+    (**(code_menu_action *)(lVar1 + 8))(param_1,lVar1,1);
   }
   lVar1 = *(long *)(lVar1 + 0x28);
   if (lVar1 == 0) {
@@ -14322,15 +14358,15 @@ void select_delete_config_local(long *param_1)
     }
   }
   else {
-    if (*(code **)(lVar1 + 8) != (code *)0x0) {
-      (**(code **)(lVar1 + 8))(param_1,lVar1,0);
+    if (*(code_menu_action *)(lVar1 + 8) != (code_menu_action)0x0) {
+      (**(code_menu_action *)(lVar1 + 8))(param_1,lVar1,0);
     }
     param_1[2] = lVar1;
   }
-  if (local_8 - ___stack_chk_guard == 0) {
+  if (local_8 - __stack_chk_guard == 0) {
     return;
   }
-  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+  __stack_chk_fail();
 }
 
 void select_save_config_global(long *param_1)
@@ -14359,8 +14395,8 @@ void select_save_config_global(long *param_1)
   puVar2[0x113] = uVar3;
   save_config_file(lVar1,"drastic.cfg",0);
   lVar1 = param_1[2];
-  if (*(code **)(lVar1 + 8) != (code *)0x0) {
-    (**(code **)(lVar1 + 8))(param_1,lVar1,1);
+  if (*(code_menu_action *)(lVar1 + 8) != (code_menu_action)0x0) {
+    (**(code_menu_action *)(lVar1 + 8))(param_1,lVar1,1);
   }
   lVar1 = *(long *)(lVar1 + 0x28);
   if (lVar1 == 0) {
@@ -14370,8 +14406,8 @@ void select_save_config_global(long *param_1)
     }
   }
   else {
-    if (*(code **)(lVar1 + 8) != (code *)0x0) {
-      (**(code **)(lVar1 + 8))(param_1,lVar1,0);
+    if (*(code_menu_action *)(lVar1 + 8) != (code_menu_action)0x0) {
+      (**(code_menu_action *)(lVar1 + 8))(param_1,lVar1,0);
     }
     param_1[2] = lVar1;
   }
@@ -14387,7 +14423,7 @@ void select_save_config_local(long *param_1)
   long local_8;
   
   lVar3 = *param_1;
-  local_8 = ___stack_chk_guard;
+  local_8 = __stack_chk_guard;
   if (*(char *)(lVar3 + 0x8b380) != '\0') {
     puVar1 = (uint *)param_1[1];
     uVar2 = *(uint *)(param_1 + 10);
@@ -14410,8 +14446,8 @@ void select_save_config_local(long *param_1)
     save_config_file(*param_1,auStack_428,1);
   }
   lVar3 = param_1[2];
-  if (*(code **)(lVar3 + 8) != (code *)0x0) {
-    (**(code **)(lVar3 + 8))(param_1,lVar3,1);
+  if (*(code_menu_action *)(lVar3 + 8) != (code_menu_action)0x0) {
+    (**(code_menu_action *)(lVar3 + 8))(param_1,lVar3,1);
   }
   lVar3 = *(long *)(lVar3 + 0x28);
   if (lVar3 == 0) {
@@ -14420,15 +14456,15 @@ void select_save_config_local(long *param_1)
     }
   }
   else {
-    if (*(code **)(lVar3 + 8) != (code *)0x0) {
-      (**(code **)(lVar3 + 8))(param_1,lVar3,0);
+    if (*(code_menu_action *)(lVar3 + 8) != (code_menu_action)0x0) {
+      (**(code_menu_action *)(lVar3 + 8))(param_1,lVar3,0);
     }
     param_1[2] = lVar3;
   }
-  if (local_8 - ___stack_chk_guard == 0) {
+  if (local_8 - __stack_chk_guard == 0) {
     return;
   }
-  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+  __stack_chk_fail();
 }
 
 void draw_input(long param_1,undefined8 *param_2,int param_3)
@@ -14457,7 +14493,7 @@ void draw_input(long param_1,undefined8 *param_2,int param_3)
   puVar9 = auStack_80;
   puVar10 = auStack_80;
   __s_00 = (char *)param_2[6];
-  local_8 = ___stack_chk_guard;
+  local_8 = __stack_chk_guard;
   sVar14 = strlen(__s_00);
   iVar3 = *(int *)(*(long *)(param_1 + 0x10) + 0x10);
   iVar4 = *(int *)(param_2 + 1) << 3;
@@ -14531,8 +14567,8 @@ void draw_input(long param_1,undefined8 *param_2,int param_3)
     print_string(local_10,0xffe0,0x1f,iVar3,iVar4);
     print_string(puVar11 + lVar6 + 0x10,0x7bef,0x10,iVar3 + 8,iVar4);
   }
-  if (local_8 - ___stack_chk_guard != 0) {
-    __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+  if (local_8 - __stack_chk_guard != 0) {
+    __stack_chk_fail();
   }
   return;
 }
@@ -14550,7 +14586,7 @@ void draw_numeric_labeled(long param_1,undefined8 *param_2,int param_3)
   undefined1 auStack_108 [256];
   long local_8;
   
-  local_8 = ___stack_chk_guard;
+  local_8 = __stack_chk_guard;
   __sprintf_chk(auStack_108,1,0x100,"%s: %s",*param_2,
                 *(undefined8 *)(param_2[8] + (ulong)*(uint *)param_2[6] * 8));
   uVar1 = 0;
@@ -14559,10 +14595,10 @@ void draw_numeric_labeled(long param_1,undefined8 *param_2,int param_3)
   }
   print_string(auStack_108,0xffff,uVar1,*(undefined4 *)(*(long *)(param_1 + 0x10) + 0x10),
                *(int *)(param_2 + 1) << 3);
-  if (local_8 - ___stack_chk_guard == 0) {
+  if (local_8 - __stack_chk_guard == 0) {
     return;
   }
-  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+  __stack_chk_fail();
 }
 
 void draw_menu_firmware(long *param_1,long param_2)

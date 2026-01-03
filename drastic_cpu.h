@@ -575,8 +575,8 @@ static inline ulong load_memory16(long param_1,ulong param_2)
 }
 
 // --- 函数实现: convert_thumb_instruction_to_arm ---
-// 注意: 在 drastic_functions.h 中声明为 void，但实际返回 ulong
-// 使用 static inline 避免冲突，但需要确保调用处正确处理返回值
+// 注意: 在 drastic_functions.h 中也有定义，这里注释掉整个实现以避免重定义
+/*
 static inline ulong convert_thumb_instruction_to_arm(ulong param_1,undefined4 *param_2)
 
 {
@@ -850,6 +850,7 @@ LAB_00129434:
   LAB_00129050:
   return (ulong)uVar6;
 }
+*/
 
 // --- 函数实现: execute_arm_condition ---
 static inline uint execute_arm_condition(long param_1,ulong param_2)
