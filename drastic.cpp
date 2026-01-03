@@ -34,7 +34,6 @@ char* __strcpy_chk(char* dest, const char* src, size_t destlen);
 int __longjmp_chk(void* env, int val);
 int __xstat(int version, const char* path, struct stat* buf);
 int __snprintf_chk(char* str, size_t maxlen, int flag, size_t strlen, const char* format, ...);
-void initialize_benchmark(long param_1, long param_2, uint param_3, int param_4, int param_5, int param_6);
 }
 
 
@@ -190,6 +189,7 @@ LAB_0016ff38:
     uVar8 = 0;
   }
   else {
+    /*
     puVar10 = (undefined*)&DAT_0021f028;
     snprintf((char*)auStack_828,0x820,"%s%c%s%c%s.%s",(char*)lVar1,0x2f,"scripts",0x2f,pcVar7,(char*)&DAT_0021f028
                  );
@@ -205,6 +205,7 @@ LAB_0016ff38:
     uVar8 = 0;
     printf("Using lua script %s\n",(char*)auStack_828);
     lua_on_load_game((undefined8)pcVar7);
+    */
   }
 LAB_0016ff3c:
   if (local_8 != (long)__stack_chk_guard) {
@@ -1552,20 +1553,8 @@ int close(int __fd)
 undefined4 lua_load_script(long param_1)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  DAT_004ec3f8 = 0;
-  if ((DAT_004ec3f0 == 0 || param_1 == 0) ||
-     (iVar1 = luaL_loadfilex(DAT_004ec3f0,param_1,0), iVar1 != 0)) {
-    uVar2 = 0xffffffff;
-  }
-  else {
-    lua_pcallk(DAT_004ec3f0,0,0xffffffff,0,0,0);
-    DAT_004ec3f8 = 1;
-    uVar2 = 0;
-  }
-  return uVar2;
+
+  return;
 }
 
 // --- 函数: fopen ---
@@ -1584,17 +1573,6 @@ undefined4 lua_load_script(long param_1)
 void lua_on_load_game(undefined8 param_1)
 
 {
-  if (DAT_004ec3f8 != '\0') {
-    if (DAT_004ec3f9 != '\0') {
-      lua_getglobal(DAT_004ec3f0,"on_unload");
-      lua_pcallk(DAT_004ec3f0,0,0xffffffff,0,0,0);
-      DAT_004ec3f9 = '\0';
-    }
-    lua_getglobal(DAT_004ec3f0,"on_load");
-    lua_pushstring(DAT_004ec3f0,param_1);
-    lua_pcallk(DAT_004ec3f0,1,0xffffffff,0,0,0);
-    DAT_004ec3f9 = '\x01';
-  }
   return;
 }
 
@@ -2593,7 +2571,7 @@ void reset_memory(long *param_1)
     }
     lVar2 = lVar2 + 0x4000;
   } while (lVar2 != 0x800000);
-  patch_firmware_user_data(param_1[0x1f74d] + 0x855a8,param_1 + 0x560e);
+  //patch_firmware_user_data(param_1[0x1f74d] + 0x855a8,param_1 + 0x560e);
   lVar4 = *param_1;
   lVar2 = param_1[0xd5cf];
   *(long *)(polygon_sort_list_13776 + lVar4 + 0x15640) = param_1[0xd5ce];
@@ -2617,14 +2595,6 @@ void reset_memory(long *param_1)
   *(long *)(polygon_sort_list_13776 + lVar4 + 0x156a0) = param_1[0xd5da];
   *(long *)(polygon_sort_list_13776 + lVar4 + 0x156a8) = lVar2;
   polygon_sort_list_13776[*param_1 + 0x15600] = 1;
-  return;
-}
-
-// --- 函数: screen_wait_for_vsync ---
-
-void screen_wait_for_vsync(void)
-
-{
   return;
 }
 
@@ -7319,7 +7289,7 @@ void draw_menu_bg(undefined8 *param_1)
   if (*(int *)(param_1 + 8) != 0) {
     if ((*(long *)(param_1[2] + 0x28) == 0) && (*(int *)(param_1[2] + 0x18) == 5)) {
       local_10 = 0;
-      savestate_index_timestamp(*param_1,*(undefined4 *)(param_1[1] + 0x458));
+      //savestate_index_timestamp(*param_1,*(undefined4 *)(param_1[1] + 0x458));
       set_font_narrow_small();
       if (local_10 == 0) {
         print_string("(No savestate)",0xffff,0,0x220);
@@ -7375,7 +7345,7 @@ void update_screen_menu(void)
 }
 
 // --- 函数: clear_gui_actions ---
-
+/*
 void clear_gui_actions(void)
 
 {
@@ -7383,7 +7353,7 @@ void clear_gui_actions(void)
   DAT_040315f8 = 0;
   return;
 }
-
+*/
 // --- 函数: delay_us ---
 
 void delay_us(ulong param_1)
@@ -7528,8 +7498,8 @@ LAB_0017b584:
     puts("Found file info cache older than game database file. Deleting.");
     unlink(".drastic_file_info.txt");
   }
-  file_info_cache_load(&local_d120);
-  icon_cache_load(&local_d108);
+  file_info_cache_load((long int*)&local_d120);
+  icon_cache_load((long int*)&local_d108);
   __stream = fopen(".drastic_file_info.txt","ab");
   __stream_00 = fopen(".drastic_icon_cache.bin","ab");
   __dirp = opendir(acStack_428);
@@ -8216,6 +8186,33 @@ LAB_0017c024:
     return iVar5;
   }
   goto LAB_0017b584;
+}
+
+void select_load_game(long *param_1)
+
+{
+  undefined4 uVar1;
+  int iVar2;
+  long lVar3;
+  undefined1 auStack_428 [1056];
+  long local_8;
+  
+  local_8 = __stack_chk_guard;
+  iVar2 = load_file(param_1,&nds_ext,auStack_428);
+  if (iVar2 != -1) {
+    lVar3 = *param_1;
+    iVar2 = load_nds(lVar3 + 800,auStack_428);
+    if (-1 < iVar2) {
+      uVar1 = *(undefined4 *)(lVar3 + 0x859f4);
+      *(undefined8 *)((long)param_1 + 0x44) = 0x100000001;
+      *(undefined4 *)((long)param_1 + 0x4c) = 0;
+      *(undefined4 *)(param_1 + 10) = uVar1;
+    }
+  }
+  if (local_8 - __stack_chk_guard == 0) {
+    return;
+  }
+                    // WARNING: Subroutine does not return
 }
 
 // --- 函数: set_screen_menu_on ---
