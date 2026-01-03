@@ -2371,7 +2371,7 @@ static inline void coprocessor_register_store(long *param_1,int param_2,int para
   }
   return;
 }
-void execute_arm_coprocessor_register_transfer_op(long param_1,ulong param_2)
+static inline void execute_arm_coprocessor_register_transfer_op(long param_1,ulong param_2)
 
 {
   uint uVar1;
@@ -2745,7 +2745,7 @@ LAB_00126bc8:
 
 // --- 函数实现: store_memory32 ---
 
-void store_memory32(long param_1,ulong param_2,undefined4 param_3)
+static inline void store_memory32(long param_1,ulong param_2,undefined4 param_3)
 
 {
   ushort uVar1;
@@ -2816,7 +2816,7 @@ void store_memory32(long param_1,ulong param_2,undefined4 param_3)
   return;
 }// --- 函数实现: store_memory16 ---
 
-void store_memory16(long param_1,ulong param_2,undefined2 param_3)
+static inline void store_memory16(long param_1,ulong param_2,undefined2 param_3)
 
 {
   long lVar1;
@@ -2890,7 +2890,7 @@ void store_memory16(long param_1,ulong param_2,undefined2 param_3)
 
 // --- 函数实现: load_memory8 ---
 
-ulong load_memory8(long param_1,ulong param_2)
+static inline ulong load_memory8(long param_1,ulong param_2)
 
 {
   long lVar1;
