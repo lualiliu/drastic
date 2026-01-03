@@ -110,16 +110,170 @@ void audio_exit(long param_1);
 void audio_sync(long param_1);
 void backup_auto_save_step(long param_1);
 void benchmark_step(long *param_1);
-void chomp_whitespace(char *param_1);
+void chomp_whitespace(char *param_1)
+{
+  int iVar1;
+  size_t sVar2;
+  ushort **ppuVar3;
+  long lVar4;
+  
+  sVar2 = strlen(param_1);
+  iVar1 = (int)sVar2 + -1;
+  if (-1 < iVar1) {
+    ppuVar3 = __ctype_b_loc();
+    lVar4 = (long)iVar1;
+    do {
+      if (((*ppuVar3)[(byte)param_1[lVar4]] >> 0xd & 1) == 0) {
+        return;
+      }
+      param_1[lVar4] = '\0';
+      lVar4 = lVar4 + -1;
+    } while (-1 < (int)lVar4);
+  }
+  return;
+}
+
 // int compare_file_info(long *param_1,long *param_2);  // 已在 drastic_val.h 中声明
-void config_default(undefined4 *param_1);
+void config_default(undefined4 *param_1)
+{
+  uint uVar1;
+  undefined4 *__s;
+  ushort uVar2;
+  long lVar3;
+  ushort *puVar4;
+  ulong uVar5;
+  
+  lVar3 = ___stack_chk_guard;
+  puVar4 = (ushort *)((long)param_1 + 0xd1e);
+  puts("Setting default configuration.");
+  *(undefined8 *)(param_1 + 0xd) = 0x100000001;
+  *(undefined8 *)(param_1 + 0xb) = 1;
+  *(undefined8 *)(param_1 + 0x112) = 0x100000001;
+  *(undefined8 *)(param_1 + 0x110) = 0x400000002;
+  *(undefined8 *)(param_1 + 0x114) = 0;
+  *(undefined8 *)(param_1 + 0x119) = 0;
+  *(undefined8 *)(param_1 + 0x117) = 0x100000000;
+  *(undefined8 *)(param_1 + 0x11d) = 0x100000001;
+  *(undefined8 *)(param_1 + 0x11b) = 0x100000000;
+  *(undefined8 *)(param_1 + 0x121) = 1;
+  *(undefined8 *)(param_1 + 0x11f) = 0;
+  *(undefined8 *)(param_1 + 0x125) = 0;
+  *(undefined8 *)(param_1 + 0x123) = 0x300000000;
+  *(undefined8 *)(param_1 + 0x129) = 0x100000000;
+  *(undefined8 *)(param_1 + 0x127) = 0;
+  *(undefined8 *)(param_1 + 0x12d) = 0x300000000;
+  *(undefined8 *)(param_1 + 299) = 0;
+  *(undefined8 *)(param_1 + 0x12f) = 0;
+  *(undefined8 *)(param_1 + 0x131) = 0;
+  *param_1 = 0x44;
+  param_1[1] = 0x72;
+  param_1[2] = 0x20;
+  param_1[3] = 0x44;
+  param_1[4] = 0x72;
+  param_1[5] = 0x61;
+  param_1[6] = 0x53;
+  param_1[7] = 0x74;
+  param_1[8] = 0x69;
+  param_1[9] = 99;
+  param_1[10] = 0;
+  *(undefined8 *)(param_1 + 0x333) = 0xffffffffffffffff;
+  *(undefined8 *)(param_1 + 0x335) = 0xffffffffffffffff;
+  *(undefined8 *)(param_1 + 0x337) = 0xffffffffffffffff;
+  *(undefined8 *)(param_1 + 0x339) = 0xffffffffffffffff;
+  __s = param_1 + 0x35c;
+  *(undefined8 *)(param_1 + 0x33b) = 0xffffffffffffffff;
+  *(undefined8 *)(param_1 + 0x33d) = 0xffffffffffffffff;
+  *(undefined8 *)(param_1 + 0x33f) = 0xffffffffffffffff;
+  *(undefined8 *)(param_1 + 0x341) = 0xffffffffffffffff;
+  *(undefined8 *)(param_1 + 0x343) = 0xffffffffffffffff;
+  *(undefined8 *)(param_1 + 0x345) = 0xffffffffffffffff;
+  *(undefined2 *)(param_1 + 0x347) = 0xffff;
+  puVar4[0] = 0xffff;
+  puVar4[1] = 0xffff;
+  puVar4[2] = 0xffff;
+  puVar4[3] = 0xffff;
+  *(undefined8 *)((long)param_1 + 0xd26) = 0xffffffffffffffff;
+  *(undefined8 *)((long)param_1 + 0xd2e) = 0xffffffffffffffff;
+  *(undefined8 *)((long)param_1 + 0xd36) = 0xffffffffffffffff;
+  *(undefined8 *)((long)param_1 + 0xd3e) = 0xffffffffffffffff;
+  *(undefined8 *)((long)param_1 + 0xd46) = 0xffffffffffffffff;
+  *(undefined8 *)((long)param_1 + 0xd4e) = 0xffffffffffffffff;
+  *(undefined8 *)((long)param_1 + 0xd56) = 0xffffffffffffffff;
+  *(undefined8 *)((long)param_1 + 0xd5e) = 0xffffffffffffffff;
+  *(undefined8 *)((long)param_1 + 0xd66) = 0xffffffffffffffff;
+  *(undefined2 *)((long)param_1 + 0xd6e) = 0xffff;
+  platform_set_default_controls(param_1 + 0x333,puVar4);
+  set_screen_orientation(param_1[0x113]);
+  set_screen_swap(param_1[0x115]);
+  memset(__s,0,0x4000);
+  uVar5 = 0;
+  do {
+    uVar2 = puVar4[-0x29];
+    if (uVar2 != 0xffff) {
+      *(ulong *)(__s + (ulong)uVar2 * 2) = *(ulong *)(__s + (ulong)uVar2 * 2) | 1L << (uVar5 & 0x3f);
+    }
+    uVar2 = *puVar4;
+    if (uVar2 != 0xffff) {
+      *(ulong *)(__s + (ulong)uVar2 * 2) = *(ulong *)(__s + (ulong)uVar2 * 2) | 1L << (uVar5 & 0x3f);
+    }
+    uVar1 = (int)uVar5 + 1;
+    uVar5 = (ulong)uVar1;
+    puVar4 = puVar4 + 1;
+  } while (uVar1 != 0x29);
+  if (lVar3 - ___stack_chk_guard == 0) {
+    return;
+  }
+  __stack_chk_fail(lVar3 - ___stack_chk_guard,0);
+}
 undefined4 coprocessor_register_load(long param_1,int param_2,int param_3,int param_4);
 int cpu_print_profiler_results(void);
 undefined8 * create_menu_controls(long param_1,undefined8 param_2);
 undefined8 * create_menu_firmware(long param_1,undefined8 param_2);
 undefined8 * create_menu_options(long param_1,undefined8 param_2);
 uint dma_transfer(long *param_1,long *param_2);
-void draw_menu_bg(undefined8 *param_1);
+void draw_menu_bg(undefined8 *param_1)
+{
+  void *__s;
+  void *__s_00;
+  char *pcVar1;
+  undefined4 uVar2;
+  long local_10;
+  long local_8;
+  
+  local_8 = ___stack_chk_guard;
+  clear_screen_menu(0,&__stack_chk_guard,0);
+  if (param_1[7] != 0) {
+    uVar2 = 0x24;
+    if (*(int *)(param_1 + 8) == 0) {
+      uVar2 = 200;
+    }
+    blit_screen_menu(param_1[7],uVar2,0x28,400,0x96);
+  }
+  uVar2 = 0x204;
+  if (*(int *)(param_1 + 8) != 0) {
+    uVar2 = 0x160;
+  }
+  set_font_narrow_small();
+  print_string("Version r2.5.2.2",0xffff,0,uVar2,0xc9);
+  set_font_wide();
+  if (*(int *)(param_1 + 8) != 0) {
+    if ((*(long *)(param_1[2] + 0x28) == 0) && (*(int *)(param_1[2] + 0x18) == 5)) {
+      local_10 = savestate_index_timestamp(*param_1,*(undefined4 *)(param_1[1] + 0x458));
+      set_font_narrow_small();
+      if (local_10 == 0) {
+        print_string("No save state",0x7bef,0,uVar2,0x1a0);
+      }
+      else {
+        print_string(ctime(&local_10),0x7bef,0,uVar2,0x1a0);
+      }
+      set_font_wide();
+    }
+  }
+  if (local_8 - ___stack_chk_guard == 0) {
+    return;
+  }
+  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+}
 // void draw_menu_main(void);  // 已在 drastic_val.h 中声明
 // void event_timer_overflow_function(long param_1,long *param_2);  // 已在 drastic_val.h 中声明
 void execute_cpu(long param_1);
@@ -149,7 +303,39 @@ undefined8 load_cheat_listing(char *param_1,undefined4 param_2,undefined4 param_
 undefined8 load_config_file_binary(long param_1,undefined8 param_2,int param_3);
 void load_custom_cheats(long param_1,long param_2);
 int load_file(long *param_1,long *param_2,char *param_3);
-void load_logo(long *param_1);
+void load_logo(long *param_1)
+{
+  time_t tVar1;
+  FILE *__stream;
+  void *__ptr;
+  size_t sVar2;
+  long lVar3;
+  char acStack_428 [1056];
+  long local_8;
+  
+  lVar3 = *param_1;
+  local_8 = ___stack_chk_guard;
+  tVar1 = time((time_t *)0x0);
+  __sprintf_chk(acStack_428,1,0x420,"%s%cdrastic_logo_%d.raw",lVar3 + 0x8a780,0x2f,(uint)tVar1 & 1);
+  __stream = fopen(acStack_428,"rb");
+  if (__stream == (FILE *)0x0) {
+    param_1[7] = 0;
+  }
+  else {
+    __ptr = malloc(120000);
+    param_1[7] = (long)__ptr;
+    sVar2 = fread(__ptr,120000,1,__stream);
+    if (sVar2 != 1) {
+      free((void *)param_1[7]);
+      param_1[7] = 0;
+    }
+    fclose(__stream);
+  }
+  if (local_8 - ___stack_chk_guard == 0) {
+    return;
+  }
+  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+}
 undefined4 luaL_loadfilex(undefined8 param_1,char *param_2,undefined8 param_3);
 uint lua_getglobal(long param_1,undefined8 param_2);
 void lua_pcallk(long param_1,int param_2,int param_3,int param_4,undefined8 param_5,long param_6);
@@ -743,7 +929,31 @@ void select_restart(long *param_1)
   return;
 }
 
-void select_load_game(long *param_1);
+void select_load_game(long *param_1)
+{
+  undefined4 uVar1;
+  int iVar2;
+  long lVar3;
+  undefined1 auStack_428 [1056];
+  long local_8;
+  
+  local_8 = ___stack_chk_guard;
+  iVar2 = load_file(param_1,&nds_ext,auStack_428);
+  if (iVar2 != -1) {
+    lVar3 = *param_1;
+    iVar2 = load_nds(lVar3 + 800,auStack_428);
+    if (-1 < iVar2) {
+      uVar1 = *(undefined4 *)(lVar3 + 0x859f4);
+      *(undefined8 *)((long)param_1 + 0x44) = 0x100000001;
+      *(undefined4 *)((long)param_1 + 0x4c) = 0;
+      *(undefined4 *)(param_1 + 10) = uVar1;
+    }
+  }
+  if (local_8 - ___stack_chk_guard == 0) {
+    return;
+  }
+  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+}
 
 void select_cheat_menu(long *param_1)
 {
@@ -777,7 +987,34 @@ void draw_menu_option(long param_1,undefined8 *param_2,int param_3)
   return;
 }
 
-void clear_screen(void);
+void clear_screen(void)
+{
+  undefined4 local_28;
+  undefined4 uStack_24;
+  undefined1 auStack_20 [4];
+  undefined4 local_1c;
+  undefined4 uStack_18;
+  long local_8;
+  
+  local_8 = ___stack_chk_guard;
+  SDL_GetCurrentDisplayMode(0,auStack_20,0);
+  SDL_RenderGetLogicalSize(DAT_04031578,&local_28,&uStack_24);
+  SDL_RenderSetLogicalSize(DAT_04031578,local_1c,uStack_18);
+  SDL_SetRenderDrawColor(DAT_04031578,0,0,0,0xffffffff);
+  SDL_RenderClear(DAT_04031578);
+  SDL_RenderPresent(DAT_04031578);
+  SDL_RenderClear(DAT_04031578);
+  SDL_RenderPresent(DAT_04031578);
+  SDL_RenderClear(DAT_04031578);
+  SDL_RenderPresent(DAT_04031578);
+  SDL_RenderClear(DAT_04031578);
+  SDL_RenderPresent(DAT_04031578);
+  SDL_RenderSetLogicalSize(DAT_04031578,local_28,uStack_24);
+  if (local_8 - ___stack_chk_guard == 0) {
+    return;
+  }
+  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+}
 
 void clear_screen_menu(undefined2 param_1)
 
@@ -820,9 +1057,309 @@ int closedir(DIR __dirp);
 
 void config_update_settings(long param_1);
 
-static inline ulong convert_thumb_instruction_to_arm(ulong param_1,undefined4 *param_2);
+ulong convert_thumb_instruction_to_arm(ulong param_1,undefined4 *param_2)
+{
+  uint uVar1;
+  long lVar2;
+  uint uVar3;
+  ulong uVar4;
+  uint uVar5;
+  uint uVar6;
+  int local_50 [18];
+  long local_8;
+  
+  lVar2 = ___stack_chk_guard;
+  local_8 = ___stack_chk_guard;
+  uVar4 = 0;
+  *param_2 = 0;
+  uVar6 = (uint)(param_1 >> 0xd) & 7;
+  uVar3 = (uint)param_1;
+  if (uVar6 == 4) {
+    uVar6 = (uVar3 >> 0xb & 1) << 0x14;
+    if ((uVar3 >> 0xc & 1) == 0) {
+      uVar4 = param_1 >> 6 & 0x1f;
+      uVar6 = (uVar3 & 7) << 0xc | ((uint)(param_1 >> 9) & 3) << 8 |
+              (uVar3 >> 3 & 7) << 0x10 | uVar6 | ((uint)uVar4 & 7) << 1 | 0xe1c000b0;
+    }
+    else {
+      uVar1 = (uVar3 & 0xff) << 2;
+      uVar4 = (ulong)uVar1;
+      uVar6 = (uVar3 >> 8 & 7) << 0xc | uVar6 | uVar1 | 0xe58d0000;
+    }
+    goto LAB_00129050;
+  }
+  if (uVar6 < 5) {
+    uVar1 = (uint)(param_1 >> 8);
+    if (uVar6 == 2) {
+      uVar6 = uVar3 >> 10;
+      if ((uVar3 >> 0xc & 1) != 0) {
+        uVar5 = (uVar3 >> 3 & 7) << 0x10;
+        uVar1 = (uint)(param_1 >> 6) & 7 | (uVar3 & 7) << 0xc;
+        uVar4 = (ulong)uVar1;
+        if ((uVar3 >> 9 & 1) == 0) {
+          uVar6 = (uVar3 >> 0xb & 1) << 0x14 | uVar1 | (uVar6 & 1) << 0x16 | uVar5 | 0xe7800000;
+        }
+        else {
+          uVar4 = (ulong)uVar6 & 3;
+          local_50[2] = 1;
+          local_50[3] = 3;
+          local_50[0] = 1;
+          local_50[1] = 2;
+          uVar6 = (uint)((uVar6 & 3) != 0) << 0x14 | local_50[uVar4] << 5 | uVar5 | uVar1 |
+                  0xe1800090;
+        }
+        goto LAB_00129050;
+      }
+      if ((uVar6 & 6) != 0) {
+        uVar4 = 0xe59f0000;
+        *param_2 = 1;
+        uVar6 = (uVar3 >> 8 & 7) << 0xc | (uVar3 & 0xff) << 2 | 0xe59f0000;
+        goto LAB_00129050;
+      }
+      if ((uVar6 & 7) == 1) {
+        uVar1 = uVar1 & 3;
+        uVar5 = (uint)(param_1 >> 3) & 0xf;
+        uVar6 = uVar3 >> 7;
+        uVar4 = (ulong)(uVar5 | 0xe0800000);
+        if (uVar1 == 2) {
+          uVar6 = uVar5 | ((uVar6 & 1) << 3 | uVar3 & 7) << 0xc | 0xe1a00000;
+        }
+        else if (uVar1 == 3) {
+          uVar6 = (uVar6 & 1) << 5 | uVar5 | 0xe12fff10;
+        }
+        else {
+          uVar6 = (uVar6 & 1) << 3 | uVar3 & 7;
+          if (uVar1 == 1) {
+            uVar6 = uVar5 | uVar6 << 0x10 | 0xe1500000;
+          }
+          else {
+            uVar6 = uVar6 << 0x10 | uVar6 << 0xc | uVar5 | 0xe0800000;
+          }
+        }
+        goto LAB_00129050;
+      }
+      uVar6 = uVar3 >> 6 & 0xf;
+      uVar1 = uVar3 & 7;
+      uVar4 = (ulong)uVar1;
+      uVar5 = (uint)(param_1 >> 3) & 7;
+      if (uVar6 == 9) {
+        uVar6 = uVar5 << 0x10 | uVar1 << 0xc | 0xe2700000;
+        goto LAB_00129050;
+      }
+      if (uVar6 < 10) {
+        if (uVar6 == 7) {
+          uVar3 = 5;
+LAB_001294c8:
+          local_50[0] = 0;
+          local_50[1] = 1;
+          local_50[2] = 2;
+          local_50[3] = 0;
+          local_50[4] = 0;
+          local_50[5] = 3;
+          uVar6 = uVar1 | local_50[uVar3] << 5;
+          uVar4 = (ulong)uVar6;
+          uVar6 = uVar5 << 8 | uVar1 << 0xc | uVar6 | 0xe1b00010;
+          goto LAB_00129050;
+        }
+        if ((uVar3 >> 9 & 1) == 0) {
+          uVar3 = uVar6 - 2;
+          if (uVar3 < 3) goto LAB_001294c8;
+        }
+        else if (uVar6 == 8) goto LAB_00129434;
+      }
+      else {
+        if (uVar6 == 0xd) {
+          uVar6 = uVar1 << 0x10 | 0xe0100090;
+          uVar4 = (ulong)uVar6;
+          uVar6 = uVar6 | uVar1 | uVar5 << 8;
+          goto LAB_00129050;
+        }
+        if (uVar6 < 0xe) {
+          if (uVar6 - 10 < 2) {
+LAB_00129434:
+            local_50[2] = 10;
+            local_50[3] = 0xb;
+            local_50[0] = 8;
+            local_50[1] = 0;
+            uVar6 = local_50[uVar6 - 8] << 0x15 | 0xe0100000U | uVar5 | uVar1 << 0x10;
+            goto LAB_00129050;
+          }
+        }
+        else if (uVar6 == 0xf) {
+          uVar6 = uVar5 | uVar1 << 0xc | 0xe1f00000;
+          goto LAB_00129050;
+        }
+      }
+      local_50[4] = 0;
+      local_50[5] = 5;
+      local_50[6] = 6;
+      local_50[7] = 0;
+      local_50[0] = 0;
+      local_50[1] = 1;
+      local_50[2] = 0;
+      local_50[3] = 0;
+      uVar5 = uVar5 | uVar1 << 0xc;
+      uVar4 = (ulong)uVar5;
+      local_50[8] = 0;
+      local_50[9] = 0;
+      local_50[10] = 0;
+      local_50[0xb] = 0;
+      local_50[0xc] = 0xc;
+      local_50[0xd] = 0;
+      local_50[0xe] = 0xe;
+      local_50[0xf] = 0;
+      uVar6 = uVar1 << 0x10 | local_50[uVar6] << 0x15 | uVar5 | 0xe0100000;
+      goto LAB_00129050;
+    }
+    if (uVar6 == 3) {
+      uVar1 = (uint)(param_1 >> 6) & 0x1f;
+      uVar6 = uVar1 << 2;
+      if ((param_1 >> 0xc & 1) != 0) {
+        uVar6 = uVar1;
+      }
+      uVar6 = (uVar3 & 7) << 0xc | uVar6;
+      uVar4 = (ulong)uVar6;
+      uVar6 = ((uint)(param_1 >> 3) & 7) << 0x10 | ((uint)(param_1 >> 0xb) & 1) << 0x14 | uVar6 |
+              ((uint)(param_1 >> 0xc) & 1) << 0x16 | 0xe5800000;
+      goto LAB_00129050;
+    }
+    if (uVar6 == 1) {
+      uVar1 = uVar1 & 7;
+      local_50[2] = 4;
+      local_50[3] = 2;
+      local_50[0] = 0xd;
+      local_50[1] = 10;
+      uVar6 = uVar1 << 0xc;
+      uVar4 = (ulong)uVar6;
+      if (local_50[param_1 >> 0xb & 3] == 0xd) {
+        uVar6 = uVar6 | uVar3 & 0xff | 0xe3b00000;
+      }
+      else {
+        uVar6 = uVar3 & 0xff | local_50[param_1 >> 0xb & 3] << 0x15 | uVar6 | uVar1 << 0x10 |
+                0xe2100000;
+      }
+      goto LAB_00129050;
+    }
+  }
+  else {
+    if (uVar6 == 6) {
+      if ((uVar3 >> 0xc & 1) == 0) {
+        uVar4 = (ulong)(uVar3 & 0xff);
+        uVar6 = (uVar3 >> 0xb & 1) << 0x14 | (uVar3 >> 8 & 7) << 0x10 | uVar3 & 0xff | 0xe8a00000;
+      }
+      else {
+        uVar6 = uVar3 >> 8 & 0xf;
+        if (uVar6 == 0xf) {
+          uVar6 = (uVar3 & 0xff) << 0x10 | 0xef000000;
+        }
+        else {
+          uVar6 = (int)(char)param_1 & 0xffffffU | uVar6 << 0x1c | 0xa000000;
+        }
+      }
+      goto LAB_00129050;
+    }
+    if (uVar6 == 7) {
+      if (((uint)(param_1 >> 0xb) & 3) - 1 < 3) {
+        uVar6 = uVar3 << 5 | 0xe6000010;
+      }
+      else {
+        uVar6 = (uint)((long)(param_1 << 0x35) >> 0x35) & 0xffffff | 0xea000000;
+      }
+      goto LAB_00129050;
+    }
+    if (uVar6 == 5) {
+      if ((uVar3 >> 0xc & 1) == 0) {
+        uVar4 = (ulong)(uVar3 & 0xff);
+        uVar6 = (uVar3 >> 8 & 7) << 0xc | uVar3 & 0xff;
+        if ((uVar3 >> 0xb & 1) == 0) {
+          uVar4 = 1;
+          *param_2 = 1;
+          uVar6 = uVar6 | 0xe28f0f00;
+        }
+        else {
+          uVar6 = uVar6 | 0xe28d0f00;
+        }
+      }
+      else if ((uVar3 >> 8 & 0xf) == 0) {
+        uVar4 = 0xe28ddf00;
+        uVar6 = uVar3 & 0x7f | 0xe28ddf00;
+        if ((param_1 & 0x80) != 0) {
+          uVar6 = uVar3 & 0x7f | 0xe24ddf00;
+        }
+      }
+      else {
+        uVar6 = uVar3 & 0xff;
+        if ((uVar3 >> 0xb & 1) == 0) {
+          uVar3 = uVar6 | 0x4000;
+          if ((param_1 & 0x100) == 0) {
+            uVar3 = uVar6;
+          }
+          uVar6 = uVar3 | 0xe92d0000;
+        }
+        else {
+          uVar3 = uVar6 | 0x8000;
+          if ((param_1 & 0x100) == 0) {
+            uVar3 = uVar6;
+          }
+          uVar6 = uVar3 | 0xe8bd0000;
+        }
+      }
+      goto LAB_00129050;
+    }
+  }
+  uVar6 = (uint)(param_1 >> 0xb) & 3;
+  uVar4 = param_1 >> 3 & 7;
+  if (uVar6 == 3) {
+    uVar6 = 0x800000;
+    if ((param_1 & 0x200) != 0) {
+      uVar6 = 0x400000;
+    }
+    uVar3 = (uVar3 & 7) << 0xc | uVar3 >> 6 & 7 | uVar6 | (uint)uVar4 << 0x10;
+    uVar4 = 0xe0100000;
+    uVar6 = uVar3 | 0xe0100000;
+    if ((param_1 & 0x400) != 0) {
+      uVar6 = uVar3 | 0xe2100000;
+    }
+  }
+  else {
+    uVar6 = (uVar3 >> 6 & 0x1f) << 7 | uVar6 << 5 | (uVar3 & 7) << 0xc | (uint)uVar4 | 0xe1b00000;
+  }
+LAB_00129050:
+  if (lVar2 - ___stack_chk_guard != 0) {
+    __stack_chk_fail(uVar6,lVar2 - ___stack_chk_guard,0,&__stack_chk_guard,uVar4);
+  }
+  return uVar6;
+}
 
-void convert_touch_coordinates(int param_1, int param_2, uint param_3, uint param_4, int param_5);
+void convert_touch_coordinates(int param_1, int param_2, uint *param_3, uint *param_4, int param_5)
+{
+  uint uVar1;
+  uint uVar2;
+  uint uVar3;
+  uint uVar4;
+  
+  uVar1 = 0;
+  if (_DAT_040315bc != 0) {
+    uVar1 = (uint)(param_1 * _DAT_040315b4) / _DAT_040315bc;
+  }
+  uVar2 = 0;
+  if (_DAT_040315c0 != 0) {
+    uVar2 = (uint)(param_2 * _DAT_040315b8) / _DAT_040315c0;
+  }
+  uVar4 = uVar1 - *(int *)(&DAT_04031530 + (ulong)((uint)DAT_040315cc ^ 1) * 5);
+  uVar3 = uVar2 - *(int *)((long)&DAT_04031530 + (ulong)((uint)DAT_040315cc ^ 1) * 0x28 + 4);
+  if ((0xff < uVar4 || 0xbf < uVar3) && (param_5 != 0)) {
+    uVar4 = uVar1 - *(int *)(&DAT_04031530 + (ulong)(uint)DAT_040315cc * 5);
+    uVar3 = uVar2 - *(int *)((long)&DAT_04031530 + (ulong)(uint)DAT_040315cc * 0x28 + 4);
+    if (0xff < uVar4 || 0xbf < uVar3) {
+      uVar3 = 0;
+      uVar4 = 0;
+    }
+  }
+  *param_3 = uVar4;
+  *param_4 = uVar3;
+  return;
+}
 
 int compare_directory_names(undefined8 *param_1,undefined8 *param_2)
 {
@@ -942,7 +1479,190 @@ undefined8 * create_menu_extra_controls(long param_1, undefined8 param_2, undefi
 
 undefined8 * create_menu_firmware(long param_1, undefined8 param_2);
 
-undefined8 * create_menu_main(long param_1);
+undefined8 * create_menu_main(long param_1)
+{
+  undefined8 *puVar1;
+  void *pvVar2;
+  undefined8 uVar3;
+  undefined8 uVar4;
+  undefined8 uVar5;
+  undefined8 *puVar6;
+  undefined8 *puVar7;
+  undefined8 *puVar8;
+  undefined4 uVar9;
+  undefined8 *puVar10;
+  long lVar11;
+  
+  lVar11 = *(long *)(param_1 + 8);
+  puVar1 = malloc(0x30);
+  *puVar1 = draw_menu_main;
+  puVar1[1] = 0;
+  *(undefined8 *)((long)puVar1 + 0x14) = 10;
+  puVar1[5] = 0;
+  pvVar2 = malloc(0x50);
+  puVar1[4] = pvVar2;
+  uVar3 = create_menu_options(param_1,puVar1);
+  uVar4 = create_menu_controls(param_1,puVar1);
+  uVar5 = create_menu_firmware(param_1,puVar1);
+  uVar9 = 0xb4;
+  if (*(int *)(param_1 + 0x40) == 0) {
+    uVar9 = 0x158;
+  }
+  *(undefined4 *)(puVar1 + 2) = uVar9;
+  puVar10 = (undefined8 *)puVar1[4];
+  puVar6 = malloc(0x38);
+  puVar8 = puVar6;
+  if (puVar6 == (undefined8 *)0x0) {
+    puVar8 = malloc(0x30);
+  }
+  *puVar8 = "Change Options";
+  *(undefined4 *)(puVar8 + 1) = 0x23;
+  puVar8[2] = draw_menu_option;
+  puVar8[3] = action_select_menu;
+  puVar8[4] = 0;
+  puVar8[5] = destroy_select_menu;
+  puVar6[6] = uVar3;
+  *puVar10 = puVar6;
+  puVar6 = malloc(0x38);
+  puVar8 = puVar6;
+  if (puVar6 == (undefined8 *)0x0) {
+    puVar8 = malloc(0x30);
+  }
+  *puVar8 = "Configure Controls";
+  *(undefined4 *)(puVar8 + 1) = 0x24;
+  puVar8[2] = draw_menu_option;
+  puVar8[3] = action_select_menu;
+  puVar8[4] = 0;
+  puVar8[5] = destroy_select_menu;
+  puVar6[6] = uVar4;
+  puVar10[1] = puVar6;
+  puVar6 = malloc(0x38);
+  puVar8 = puVar6;
+  if (puVar6 == (undefined8 *)0x0) {
+    puVar8 = malloc(0x30);
+  }
+  *puVar8 = "Configure Firmware";
+  *(undefined4 *)(puVar8 + 1) = 0x25;
+  puVar8[2] = draw_menu_option;
+  puVar8[3] = action_select_menu;
+  puVar8[4] = 0;
+  puVar8[5] = destroy_select_menu;
+  puVar6[6] = uVar5;
+  puVar10[2] = puVar6;
+  puVar6 = malloc(0x38);
+  puVar8 = puVar6;
+  if (puVar6 == (undefined8 *)0x0) {
+    puVar8 = malloc(0x30);
+  }
+  *puVar8 = "Configure Cheats";
+  *(undefined4 *)(puVar8 + 1) = 0x26;
+  puVar8[2] = draw_menu_option;
+  puVar8[3] = action_select;
+  puVar8[4] = 0;
+  puVar8[5] = 0;
+  lVar11 = lVar11 + 0x458;
+  puVar6[6] = select_cheat_menu;
+  puVar10[3] = puVar6;
+  puVar7 = malloc(0x50);
+  puVar8 = puVar7;
+  puVar6 = puVar7;
+  if (puVar7 == (undefined8 *)0x0) {
+    puVar6 = malloc(0x40);
+    puVar8 = puVar6;
+    if (puVar6 == (undefined8 *)0x0) {
+      puVar8 = malloc(0x30);
+    }
+  }
+  *puVar8 = "Load state   ";
+  *(undefined4 *)(puVar8 + 1) = 0x28;
+  puVar8[2] = draw_numeric;
+  puVar8[3] = action_numeric;
+  puVar8[4] = 0;
+  puVar8[5] = 0;
+  puVar6[6] = lVar11;
+  puVar6[7] = 0x900000000;
+  puVar7[3] = action_numeric_select;
+  puVar7[4] = focus_savestate;
+  puVar7[8] = modify_snapshot_bg;
+  puVar7[9] = select_load_state;
+  puVar10[4] = puVar7;
+  puVar7 = malloc(0x50);
+  puVar8 = puVar7;
+  puVar6 = puVar7;
+  if (puVar7 == (undefined8 *)0x0) {
+    puVar6 = malloc(0x40);
+    puVar8 = puVar6;
+    if (puVar6 == (undefined8 *)0x0) {
+      puVar8 = malloc(0x30);
+    }
+  }
+  *puVar8 = "Save state   ";
+  *(undefined4 *)(puVar8 + 1) = 0x29;
+  puVar8[2] = draw_numeric;
+  puVar8[3] = action_numeric;
+  puVar8[4] = 0;
+  puVar8[5] = 0;
+  puVar6[6] = lVar11;
+  puVar6[7] = 0x900000000;
+  puVar7[3] = action_numeric_select;
+  puVar7[4] = focus_savestate;
+  puVar7[8] = modify_snapshot_bg;
+  puVar7[9] = select_save_state;
+  puVar10[5] = puVar7;
+  puVar6 = malloc(0x38);
+  puVar8 = puVar6;
+  if (puVar6 == (undefined8 *)0x0) {
+    puVar8 = malloc(0x30);
+  }
+  *puVar8 = "Load new game ";
+  *(undefined4 *)(puVar8 + 1) = 0x2b;
+  puVar8[2] = draw_menu_option;
+  puVar8[3] = action_select;
+  puVar8[4] = 0;
+  puVar8[5] = 0;
+  puVar6[6] = select_load_game;
+  puVar10[6] = puVar6;
+  puVar6 = malloc(0x38);
+  puVar8 = puVar6;
+  if (puVar6 == (undefined8 *)0x0) {
+    puVar8 = malloc(0x30);
+  }
+  *puVar8 = "Restart game  ";
+  *(undefined4 *)(puVar8 + 1) = 0x2c;
+  puVar8[2] = draw_menu_option;
+  puVar8[3] = action_select;
+  puVar8[4] = 0;
+  puVar8[5] = 0;
+  puVar6[6] = select_restart;
+  puVar10[7] = puVar6;
+  puVar6 = malloc(0x38);
+  puVar8 = puVar6;
+  if (puVar6 == (undefined8 *)0x0) {
+    puVar8 = malloc(0x30);
+  }
+  *puVar8 = "Return to game";
+  *(undefined4 *)(puVar8 + 1) = 0x2e;
+  puVar8[2] = draw_menu_option;
+  puVar8[3] = action_select;
+  puVar8[4] = 0;
+  puVar8[5] = 0;
+  puVar6[6] = select_return;
+  puVar10[8] = puVar6;
+  puVar6 = malloc(0x38);
+  puVar8 = puVar6;
+  if (puVar6 == (undefined8 *)0x0) {
+    puVar8 = malloc(0x30);
+  }
+  *puVar8 = "Exit DraStic  ";
+  *(undefined4 *)(puVar8 + 1) = 0x30;
+  puVar8[2] = draw_menu_option;
+  puVar8[3] = action_select;
+  puVar8[4] = 0;
+  puVar8[5] = 0;
+  puVar6[6] = select_quit;
+  puVar10[9] = puVar6;
+  return puVar1;
+}
 
 undefined8 * create_menu_options(long param_1, undefined8 param_2);
 
@@ -13456,6 +14176,728 @@ LAB_00130cbc:
   uVar4 = 0;
   *(short *)((long)param_1 + 0x458894) = (short)param_2 + 1;
   return uVar4;
+}
+
+// ==================== 添加缺失的函数实现 ====================
+
+void draw_menu_controls(long *param_1,long param_2)
+{
+  long lVar1;
+  undefined1 auStack_148 [32];
+  undefined1 auStack_128 [32];
+  undefined1 auStack_108 [256];
+  long local_8;
+  
+  lVar1 = *param_1;
+  local_8 = ___stack_chk_guard;
+  platform_print_code(auStack_148,*(undefined2 *)(lVar1 + 0x862ba));
+  platform_print_code(auStack_128,*(undefined2 *)(lVar1 + 0x862be));
+  print_string("Configure Controls",0xffff,0,*(int *)(param_2 + 0x10) + 0x10,0xe0);
+  __sprintf_chk(auStack_108,1,0x100,"%s: Modify",auStack_148);
+  print_string(auStack_108,0x600,0,*(int *)(param_2 + 0x10) + 0x10,0xe8);
+  __sprintf_chk(auStack_108,1,0x100,"%s: Unmap",auStack_128);
+  print_string(auStack_108,0x17,0,*(int *)(param_2 + 0x10) + 0xd0,0xe8);
+  if (local_8 - ___stack_chk_guard == 0) {
+    return;
+  }
+  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+}
+
+void focus_menu_none(void)
+{
+  return;
+}
+
+void draw_button_config(long param_1,undefined8 *param_2,int param_3)
+{
+  int iVar1;
+  int iVar2;
+  size_t sVar3;
+  undefined4 uVar4;
+  undefined4 uVar5;
+  undefined4 uVar6;
+  undefined1 auStack_48 [32];
+  undefined1 auStack_28 [32];
+  long local_8;
+  
+  iVar1 = *(int *)(*(long *)(param_1 + 0x10) + 0x10);
+  local_8 = ___stack_chk_guard;
+  sVar3 = strlen((char *)*param_2);
+  platform_print_code(auStack_48,*(undefined2 *)param_2[7]);
+  platform_print_code(auStack_28,*(undefined2 *)param_2[8]);
+  uVar5 = 0;
+  uVar6 = 0;
+  if (param_3 != 0) {
+    uVar4 = 0x17;
+    if (*(char *)(param_2 + 9) != '\0') {
+      uVar4 = 0x600;
+    }
+    uVar5 = 0;
+    uVar6 = uVar4;
+    if (*(int *)(param_1 + 0x164) == 0) {
+      uVar6 = 0;
+      uVar5 = uVar4;
+    }
+  }
+  print_string(*param_2,0xffff,0,iVar1,*(int *)(param_2 + 1) << 3);
+  iVar2 = ((int)sVar3 + 1) * 8;
+  print_string(auStack_48,0xffff,uVar5,iVar2 + iVar1,*(int *)(param_2 + 1) << 3);
+  print_string(auStack_28,0xffff,uVar6,iVar2 + 0x78 + iVar1,*(int *)(param_2 + 1) << 3);
+  if (local_8 - ___stack_chk_guard == 0) {
+    return;
+  }
+  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+}
+
+uint action_button_config(long param_1,long param_2,uint *param_3)
+{
+  undefined8 *puVar1;
+  uint uVar2;
+  ulong uVar3;
+  
+  if (*(char *)(param_2 + 0x48) != '\0') {
+    uVar3 = platform_get_config_input();
+    if (((uint)(uVar3 >> 10) & 0x3fffff) != 0x3f) {
+      puVar1 = (undefined8 *)(param_2 + 0x38);
+      if (*(int *)(param_1 + 0x164) == 1) {
+        puVar1 = (undefined8 *)(param_2 + 0x40);
+      }
+      *(short *)*puVar1 = (short)uVar3;
+    }
+    *(undefined1 *)(param_2 + 0x48) = 0;
+    *(undefined4 *)(param_1 + 0x168) = 0;
+    clear_gui_actions();
+    delay_us(100000);
+    return 0xb;
+  }
+  uVar2 = *param_3;
+  if (uVar2 != 4) {
+    if (uVar2 < 5) {
+      if (uVar2 - 2 < 2) {
+        uVar2 = 0xb;
+        *(uint *)(param_1 + 0x164) = *(uint *)(param_1 + 0x164) ^ 1;
+      }
+    }
+    else if (uVar2 == 6) {
+      puVar1 = (undefined8 *)(param_2 + 0x38);
+      if (*(int *)(param_1 + 0x164) == 1) {
+        puVar1 = (undefined8 *)(param_2 + 0x40);
+      }
+      *(undefined2 *)*puVar1 = 0xffff;
+      return 0xb;
+    }
+    return uVar2;
+  }
+  *(undefined1 *)(param_2 + 0x48) = 1;
+  *(undefined4 *)(param_1 + 0x168) = 1;
+  return 0xb;
+}
+
+void select_restore_default_controls(long param_1)
+{
+  platform_set_default_controls(*(long *)(param_1 + 8) + 0xccc,*(long *)(param_1 + 8) + 0xd1e);
+  return;
+}
+
+void select_delete_config_local(long *param_1)
+{
+  long lVar1;
+  char acStack_828 [2080];
+  long local_8;
+  
+  lVar1 = *param_1;
+  local_8 = ___stack_chk_guard;
+  if (*(char *)(lVar1 + 0x8b380) != '\0') {
+    __sprintf_chk(acStack_828,1,0x820,"%s%cconfig%c%s.cfg",lVar1 + 0x8ab80,0x2f,0x2f,lVar1 + 0x8b380);
+    unlink(acStack_828);
+  }
+  lVar1 = param_1[2];
+  if (*(code **)(lVar1 + 8) != (code *)0x0) {
+    (**(code **)(lVar1 + 8))(param_1,lVar1,1);
+  }
+  lVar1 = *(long *)(lVar1 + 0x28);
+  if (lVar1 == 0) {
+    if (*(char *)(*param_1 + 0x8b380) != '\0') {
+      *(undefined4 *)(param_1 + 9) = 1;
+    }
+  }
+  else {
+    if (*(code **)(lVar1 + 8) != (code *)0x0) {
+      (**(code **)(lVar1 + 8))(param_1,lVar1,0);
+    }
+    param_1[2] = lVar1;
+  }
+  if (local_8 - ___stack_chk_guard == 0) {
+    return;
+  }
+  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+}
+
+void select_save_config_global(long *param_1)
+{
+  long lVar1;
+  uint *puVar2;
+  uint uVar3;
+  
+  puVar2 = (uint *)param_1[1];
+  uVar3 = *(uint *)(param_1 + 10);
+  *puVar2 = (uint)*(byte *)(param_1 + 0xb);
+  puVar2[1] = (uint)*(byte *)((long)param_1 + 0x59);
+  puVar2[2] = (uint)*(byte *)((long)param_1 + 0x5a);
+  puVar2[3] = (uint)*(byte *)((long)param_1 + 0x5b);
+  puVar2[4] = (uint)*(byte *)((long)param_1 + 0x5c);
+  puVar2[5] = (uint)*(byte *)((long)param_1 + 0x5d);
+  puVar2[6] = (uint)*(byte *)((long)param_1 + 0x5e);
+  puVar2[7] = (uint)*(byte *)((long)param_1 + 0x5f);
+  puVar2[8] = (uint)*(byte *)(param_1 + 0xc);
+  puVar2[9] = (uint)*(byte *)((long)param_1 + 0x61);
+  puVar2[10] = (uint)*(byte *)((long)param_1 + 0x62);
+  if (1 < uVar3) {
+    uVar3 = puVar2[0x113] | 2;
+  }
+  lVar1 = *param_1;
+  puVar2[0x113] = uVar3;
+  save_config_file(lVar1,"drastic.cfg",0);
+  lVar1 = param_1[2];
+  if (*(code **)(lVar1 + 8) != (code *)0x0) {
+    (**(code **)(lVar1 + 8))(param_1,lVar1,1);
+  }
+  lVar1 = *(long *)(lVar1 + 0x28);
+  if (lVar1 == 0) {
+    if (*(char *)(*param_1 + 0x8b380) != '\0') {
+      *(undefined4 *)(param_1 + 9) = 1;
+      return;
+    }
+  }
+  else {
+    if (*(code **)(lVar1 + 8) != (code *)0x0) {
+      (**(code **)(lVar1 + 8))(param_1,lVar1,0);
+    }
+    param_1[2] = lVar1;
+  }
+  return;
+}
+
+void select_save_config_local(long *param_1)
+{
+  uint *puVar1;
+  uint uVar2;
+  long lVar3;
+  undefined1 auStack_428 [1056];
+  long local_8;
+  
+  lVar3 = *param_1;
+  local_8 = ___stack_chk_guard;
+  if (*(char *)(lVar3 + 0x8b380) != '\0') {
+    puVar1 = (uint *)param_1[1];
+    uVar2 = *(uint *)(param_1 + 10);
+    *puVar1 = (uint)*(byte *)(param_1 + 0xb);
+    puVar1[1] = (uint)*(byte *)((long)param_1 + 0x59);
+    puVar1[2] = (uint)*(byte *)((long)param_1 + 0x5a);
+    puVar1[3] = (uint)*(byte *)((long)param_1 + 0x5b);
+    puVar1[4] = (uint)*(byte *)((long)param_1 + 0x5c);
+    puVar1[5] = (uint)*(byte *)((long)param_1 + 0x5d);
+    puVar1[6] = (uint)*(byte *)((long)param_1 + 0x5e);
+    puVar1[7] = (uint)*(byte *)((long)param_1 + 0x5f);
+    puVar1[8] = (uint)*(byte *)(param_1 + 0xc);
+    puVar1[9] = (uint)*(byte *)((long)param_1 + 0x61);
+    puVar1[10] = (uint)*(byte *)((long)param_1 + 0x62);
+    if (1 < uVar2) {
+      uVar2 = puVar1[0x113] | 2;
+    }
+    puVar1[0x113] = uVar2;
+    __sprintf_chk(auStack_428,1,0x420,"%s.cfg",lVar3 + 0x8b380);
+    save_config_file(*param_1,auStack_428,1);
+  }
+  lVar3 = param_1[2];
+  if (*(code **)(lVar3 + 8) != (code *)0x0) {
+    (**(code **)(lVar3 + 8))(param_1,lVar3,1);
+  }
+  lVar3 = *(long *)(lVar3 + 0x28);
+  if (lVar3 == 0) {
+    if (*(char *)(*param_1 + 0x8b380) != '\0') {
+      *(undefined4 *)(param_1 + 9) = 1;
+    }
+  }
+  else {
+    if (*(code **)(lVar3 + 8) != (code *)0x0) {
+      (**(code **)(lVar3 + 8))(param_1,lVar3,0);
+    }
+    param_1[2] = lVar3;
+  }
+  if (local_8 - ___stack_chk_guard == 0) {
+    return;
+  }
+  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+}
+
+void draw_input(long param_1,undefined8 *param_2,int param_3)
+{
+  ulong uVar1;
+  char *__dest;
+  uint uVar2;
+  int iVar3;
+  int iVar4;
+  uint uVar5;
+  long lVar6;
+  long lVar7;
+  undefined1 *puVar8;
+  undefined1 *puVar9;
+  undefined1 *puVar11;
+  undefined1 *puVar13;
+  size_t sVar14;
+  char *__s;
+  char *__s_00;
+  undefined1 auStack_80 [16];
+  char local_10 [8];
+  long local_8;
+  undefined1 *puVar10;
+  undefined1 *puVar12;
+  
+  puVar9 = auStack_80;
+  puVar10 = auStack_80;
+  __s_00 = (char *)param_2[6];
+  local_8 = ___stack_chk_guard;
+  sVar14 = strlen(__s_00);
+  iVar3 = *(int *)(*(long *)(param_1 + 0x10) + 0x10);
+  iVar4 = *(int *)(param_2 + 1) << 3;
+  uVar5 = *(int *)(param_2 + 7) - (int)sVar14;
+  if (param_3 == 0) {
+    print_string(*param_2,0xffff,0,iVar3,iVar4);
+    sVar14 = strlen((char *)*param_2);
+    print_string(__s_00,0x7bef,0,iVar3 + ((int)sVar14 + uVar5) * 8,iVar4);
+  }
+  else {
+    print_string(*param_2,0xffff,0x10,iVar3,iVar4);
+    uVar2 = *(uint *)((long)param_2 + 0x3c);
+    uVar1 = (ulong)(*(int *)(param_2 + 7) + 1) + 0xf;
+    puVar11 = auStack_80;
+    while (puVar10 != auStack_80 + -(uVar1 & 0x1ffff0000)) {
+      puVar9 = puVar11 + -0x10000;
+      *(undefined8 *)(puVar11 + -0xfc00) = 0;
+      puVar10 = puVar11 + -0x10000;
+      puVar11 = puVar11 + -0x10000;
+    }
+    lVar6 = -(uVar1 & 0xfff0);
+    puVar11 = puVar9 + lVar6;
+    puVar12 = puVar9 + lVar6;
+    *(undefined8 *)(puVar9 + lVar6) = 0;
+    if (0x3ff < (uVar1 & 0xfff0)) {
+      *(undefined8 *)(puVar9 + lVar6 + 0x400) = 0;
+    }
+    __dest = puVar9 + lVar6 + 0x10;
+    puVar8 = puVar9 + lVar6;
+    while (puVar12 != puVar9 + (lVar6 - (uVar1 & 0x1ffff0000))) {
+      puVar11 = puVar8 + -0x10000;
+      *(undefined8 *)(puVar8 + -0xfc00) = 0;
+      puVar12 = puVar8 + -0x10000;
+      puVar8 = puVar8 + -0x10000;
+    }
+    lVar6 = -(uVar1 & 0xfff0);
+    puVar9 = puVar11 + lVar6;
+    puVar13 = puVar11 + lVar6;
+    *(undefined8 *)(puVar11 + lVar6) = 0;
+    if (0x3ff < (uVar1 & 0xfff0)) {
+      *(undefined8 *)(puVar11 + lVar6 + 0x400) = 0;
+    }
+    puVar8 = puVar11 + lVar6;
+    while (puVar13 != puVar11 + (lVar6 - (uVar1 & 0x1ffff0000))) {
+      puVar9 = puVar8 + -0x10000;
+      *(undefined8 *)(puVar8 + -0xfc00) = 0;
+      puVar13 = puVar8 + -0x10000;
+      puVar8 = puVar8 + -0x10000;
+    }
+    lVar7 = -(uVar1 & 0xfff0);
+    *(undefined8 *)(puVar9 + lVar7) = 0;
+    if (0x3ff < (uVar1 & 0xfff0)) {
+      *(undefined8 *)(puVar9 + lVar7 + 0x400) = 0;
+    }
+    strcpy(__dest,__s_00);
+    strcpy(puVar11 + lVar6 + 0x10,__s_00 + (ulong)uVar2 + 1);
+    __s = (char *)*param_2;
+    puVar9 = puVar9 + lVar7 + 0x10;
+    __dest[uVar2] = '\0';
+    sVar14 = strlen(__s);
+    iVar3 = iVar3 + (int)sVar14 * 8;
+    memset(puVar9,0x20,(ulong)uVar5);
+    puVar9[uVar5] = 0;
+    print_string(puVar9,0x7bef,0x10,iVar3,iVar4);
+    local_10[0] = __s_00[uVar2];
+    iVar3 = iVar3 + uVar5 * 8;
+    local_10[1] = 0;
+    print_string(__dest,0x7bef,0x10,iVar3,iVar4);
+    sVar14 = strlen(__dest);
+    iVar3 = iVar3 + (int)sVar14 * 8;
+    print_string(local_10,0xffe0,0x1f,iVar3,iVar4);
+    print_string(puVar11 + lVar6 + 0x10,0x7bef,0x10,iVar3 + 8,iVar4);
+  }
+  if (local_8 - ___stack_chk_guard != 0) {
+    __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+  }
+  return;
+}
+
+uint action_input(long param_1,long param_2,uint *param_3)
+{
+  // action_input 函数在 source_ref.cpp 中未找到完整实现
+  // 返回默认值
+  return *param_3;
+}
+
+void draw_numeric_labeled(long param_1,undefined8 *param_2,int param_3)
+{
+  undefined4 uVar1;
+  undefined1 auStack_108 [256];
+  long local_8;
+  
+  local_8 = ___stack_chk_guard;
+  __sprintf_chk(auStack_108,1,0x100,"%s: %s",*param_2,
+                *(undefined8 *)(param_2[8] + (ulong)*(uint *)param_2[6] * 8));
+  uVar1 = 0;
+  if (param_3 != 0) {
+    uVar1 = 0x17;
+  }
+  print_string(auStack_108,0xffff,uVar1,*(undefined4 *)(*(long *)(param_1 + 0x10) + 0x10),
+               *(int *)(param_2 + 1) << 3);
+  if (local_8 - ___stack_chk_guard == 0) {
+    return;
+  }
+  __stack_chk_fail(local_8 - ___stack_chk_guard,0);
+}
+
+void draw_menu_firmware(long *param_1,long param_2)
+{
+  print_string("Configure Firmware User Settings",0xffff,0,*(int *)(param_2 + 0x10) + 0x10,0xf8);
+  print_string("(Note: changes take effect only",0xbac2,0,*(int *)(param_2 + 0x10) + 0x10,0x180);
+  print_string(" when a game is newly loaded)",0xbac2,0,*(int *)(param_2 + 0x10) + 0x10,0x188);
+  fill_screen_menu(0xffffffff,*(int *)(param_2 + 0x10) + 0x118,0x128,0x10,8);
+  fill_screen_menu(*(undefined2 *)(&favorite_colors + (ulong)*(uint *)(*param_1 + 0x855d8) * 2),
+                   *(int *)(param_2 + 0x10) + 0x119,0x129,0xe,6);
+  return;
+}
+
+void draw_menu_options(undefined8 param_1,long param_2)
+{
+  print_string("Configure Options",0xffff,0,*(int *)(param_2 + 0x10) + 0x30,0xe0);
+  return;
+}
+
+undefined8 * create_menu_extra_controls(long param_1,undefined8 param_2,undefined8 param_3)
+{
+  int iVar1;
+  long lVar2;
+  long lVar3;
+  undefined4 uVar4;
+  undefined8 *puVar5;
+  void *pvVar6;
+  undefined8 *puVar7;
+  undefined8 *puVar8;
+  long lVar9;
+  undefined *puVar10;
+  long lVar11;
+  
+  lVar9 = *(long *)(param_1 + 8);
+  puVar5 = malloc(0x30);
+  *puVar5 = draw_menu_controls;
+  puVar5[1] = focus_menu_none;
+  *(undefined4 *)(puVar5 + 3) = 0;
+  puVar5[5] = param_3;
+  lVar11 = 0;
+  pvVar6 = malloc(0xc0);
+  puVar5[4] = pvVar6;
+  do {
+    while( true ) {
+      lVar3 = ((ulong)(uint)(&options_to_config_map_11898)[lVar11] + 0x666) * 2;
+      puVar10 = (&input_names_11897)[lVar11];
+      puVar7 = malloc(0x50);
+      lVar2 = lVar9 + lVar3 + 0x52;
+      lVar3 = lVar9 + lVar3;
+      iVar1 = (int)lVar11 + 0x1e;
+      if (puVar7 != (undefined8 *)0x0) break;
+      puVar7 = malloc(0x30);
+      *(undefined8 *)((long)pvVar6 + lVar11 * 8) = 0;
+      *puVar7 = puVar10;
+      *(int *)(puVar7 + 1) = iVar1;
+      puVar7[2] = draw_button_config;
+      puVar7[3] = action_button_config;
+      lVar11 = lVar11 + 1;
+      puVar7[4] = 0;
+      puVar7[5] = 0;
+      uRam0000000000000048 = 0;
+      lRam0000000000000038 = lVar3;
+      lRam0000000000000040 = lVar2;
+      if (lVar11 == 0x14) goto LAB_0017e9f8;
+    }
+    *puVar7 = puVar10;
+    *(int *)(puVar7 + 1) = iVar1;
+    puVar7[2] = draw_button_config;
+    puVar7[3] = action_button_config;
+    puVar7[4] = 0;
+    puVar7[5] = 0;
+    puVar7[7] = lVar3;
+    *(undefined8 **)((long)pvVar6 + lVar11 * 8) = puVar7;
+    puVar7[8] = lVar2;
+    *(undefined1 *)(puVar7 + 9) = 0;
+    lVar11 = lVar11 + 1;
+  } while (lVar11 != 0x14);
+LAB_0017e9f8:
+  puVar8 = malloc(0x38);
+  puVar7 = puVar8;
+  if (puVar8 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x30);
+  }
+  *puVar7 = "Restore default controls";
+  *(undefined4 *)(puVar7 + 1) = 0x33;
+  puVar7[2] = draw_menu_option;
+  puVar7[3] = action_select;
+  puVar7[4] = 0;
+  puVar7[5] = 0;
+  puVar8[6] = select_restore_default_controls;
+  *(undefined8 **)((long)pvVar6 + 0xa0) = puVar8;
+  puVar8 = malloc(0x38);
+  puVar7 = puVar8;
+  if (puVar8 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x30);
+  }
+  *puVar7 = "Delete game-specific config";
+  *(undefined4 *)(puVar7 + 1) = 0x34;
+  puVar7[2] = draw_menu_option;
+  puVar7[3] = action_select;
+  puVar7[4] = 0;
+  puVar7[5] = 0;
+  puVar8[6] = select_delete_config_local;
+  *(undefined8 **)((long)pvVar6 + 0xa8) = puVar8;
+  puVar8 = malloc(0x38);
+  puVar7 = puVar8;
+  if (puVar8 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x30);
+  }
+  *puVar7 = "Exit: save for all games";
+  *(undefined4 *)(puVar7 + 1) = 0x36;
+  puVar7[2] = draw_menu_option;
+  puVar7[3] = action_select;
+  puVar7[4] = 0;
+  puVar7[5] = 0;
+  puVar8[6] = select_save_config_global;
+  *(undefined8 **)((long)pvVar6 + 0xb0) = puVar8;
+  puVar8 = malloc(0x38);
+  puVar7 = puVar8;
+  if (puVar8 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x30);
+  }
+  iVar1 = *(int *)(param_1 + 0x40);
+  *puVar7 = "Exit without saving";
+  *(undefined4 *)(puVar7 + 1) = 0x37;
+  puVar7[2] = draw_menu_option;
+  puVar7[3] = action_select;
+  puVar7[4] = 0;
+  puVar7[5] = 0;
+  uVar4 = 0x38;
+  if (iVar1 == 0) {
+    uVar4 = 0xd8;
+  }
+  *(undefined8 **)((long)pvVar6 + 0xb8) = puVar8;
+  *(undefined4 *)(puVar5 + 2) = uVar4;
+  *(undefined4 *)((long)puVar5 + 0x14) = 0x18;
+  puVar8[6] = select_exit_current_menu;
+  *(undefined4 *)(param_1 + 0x164) = 0;
+  return puVar5;
+}
+
+undefined8 * create_menu_video_options(long param_1,undefined8 param_2,undefined8 param_3)
+{
+  int iVar1;
+  undefined4 uVar2;
+  undefined8 *puVar3;
+  undefined8 *puVar4;
+  undefined8 *puVar5;
+  undefined8 *puVar6;
+  undefined8 *puVar7;
+  long lVar8;
+  
+  lVar8 = *(long *)(param_1 + 8);
+  puVar3 = malloc(0x30);
+  *puVar3 = draw_menu_video_options;
+  puVar3[1] = focus_menu_none;
+  *(undefined4 *)(puVar3 + 3) = 0;
+  puVar3[5] = param_3;
+  puVar4 = malloc(0x78);
+  puVar3[4] = puVar4;
+  puVar5 = malloc(0x48);
+  puVar7 = puVar5;
+  if (puVar5 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x40);
+  }
+  puVar6 = puVar7;
+  if (puVar7 == (undefined8 *)0x0) {
+    puVar6 = malloc(0x30);
+  }
+  *puVar6 = "Frame skip type        ";
+  *(undefined4 *)(puVar6 + 1) = 0x1e;
+  puVar6[2] = draw_numeric;
+  puVar6[3] = action_numeric;
+  puVar6[4] = 0;
+  puVar6[5] = 0;
+  puVar7[6] = lVar8 + 0x440;
+  puVar7[7] = 0x200000000;
+  *puVar4 = puVar5;
+  puVar5[2] = draw_numeric_labeled;
+  puVar5[8] = frameskip_labels_11876;
+  puVar5 = malloc(0x40);
+  puVar7 = puVar5;
+  if (puVar5 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x30);
+  }
+  *puVar7 = "Frame skip value                   ";
+  *(undefined4 *)(puVar7 + 1) = 0x1f;
+  puVar7[2] = draw_numeric;
+  puVar7[3] = action_numeric;
+  puVar7[4] = 0;
+  puVar7[5] = 0;
+  puVar4[1] = puVar5;
+  puVar5[6] = lVar8 + 0x444;
+  puVar5[7] = 0x900000001;
+  puVar5 = malloc(0x48);
+  puVar7 = puVar5;
+  if (puVar5 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x40);
+  }
+  puVar6 = puVar7;
+  if (puVar7 == (undefined8 *)0x0) {
+    puVar6 = malloc(0x30);
+  }
+  *puVar6 = "Safe frame skipping    ";
+  *(undefined4 *)(puVar6 + 1) = 0x20;
+  puVar6[2] = draw_numeric;
+  puVar6[3] = action_numeric;
+  puVar6[4] = 0;
+  puVar6[5] = 0;
+  puVar7[6] = lVar8 + 0x4ac;
+  puVar7[7] = 0x100000000;
+  puVar4[2] = puVar5;
+  puVar5[2] = draw_numeric_labeled;
+  puVar5[8] = yes_no_labels_11875;
+  puVar5 = malloc(0x48);
+  puVar7 = puVar5;
+  if (puVar5 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x40);
+  }
+  puVar6 = puVar7;
+  if (puVar7 == (undefined8 *)0x0) {
+    puVar6 = malloc(0x30);
+  }
+  *puVar6 = "Screen orientation     ";
+  *(undefined4 *)(puVar6 + 1) = 0x22;
+  puVar6[2] = draw_numeric;
+  puVar6[3] = action_numeric;
+  puVar6[4] = 0;
+  puVar6[5] = 0;
+  puVar7[6] = param_1 + 0x50;
+  puVar7[7] = 0x200000000;
+  puVar5[2] = draw_numeric_labeled;
+  puVar4[3] = puVar5;
+  puVar5[8] = orientation_labels_11877;
+  puVar5 = malloc(0x48);
+  puVar7 = puVar5;
+  if (puVar5 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x40);
+  }
+  puVar6 = puVar7;
+  if (puVar7 == (undefined8 *)0x0) {
+    puVar6 = malloc(0x30);
+  }
+  *puVar6 = "Screen swap            ";
+  *(undefined4 *)(puVar6 + 1) = 0x23;
+  puVar6[2] = draw_numeric;
+  puVar6[3] = action_numeric;
+  puVar6[4] = 0;
+  puVar6[5] = 0;
+  puVar7[6] = lVar8 + 0x454;
+  puVar7[7] = 0x100000000;
+  puVar5[2] = draw_numeric_labeled;
+  puVar4[4] = puVar5;
+  puVar5[8] = yes_no_labels_11875;
+  puVar5 = malloc(0x48);
+  puVar7 = puVar5;
+  if (puVar5 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x40);
+  }
+  puVar6 = puVar7;
+  if (puVar7 == (undefined8 *)0x0) {
+    puVar6 = malloc(0x30);
+  }
+  *puVar6 = "Mirror touchscreen     ";
+  *(undefined4 *)(puVar6 + 1) = 0x24;
+  puVar6[2] = draw_numeric;
+  puVar6[3] = action_numeric;
+  puVar6[4] = 0;
+  puVar6[5] = 0;
+  puVar7[6] = lVar8 + 0x46c;
+  puVar7[7] = 0x100000000;
+  puVar5[2] = draw_numeric_labeled;
+  puVar4[5] = puVar5;
+  puVar5[8] = yes_no_labels_11875;
+  puVar5 = malloc(0x48);
+  puVar7 = puVar5;
+  if (puVar5 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x40);
+  }
+  puVar6 = puVar7;
+  if (puVar7 == (undefined8 *)0x0) {
+    puVar6 = malloc(0x30);
+  }
+  *puVar6 = "Fix main 2D screen     ";
+  *(undefined4 *)(puVar6 + 1) = 0x25;
+  puVar6[2] = draw_numeric;
+  puVar6[3] = action_numeric;
+  puVar6[4] = 0;
+  puVar6[5] = 0;
+  puVar7[6] = lVar8 + 0x498;
+  puVar7[7] = 0x100000000;
+  puVar5[2] = draw_numeric_labeled;
+  puVar4[6] = puVar5;
+  puVar5[8] = yes_no_labels_11875;
+  puVar5 = malloc(0x48);
+  puVar7 = puVar5;
+  if (puVar5 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x40);
+  }
+  puVar6 = puVar7;
+  if (puVar7 == (undefined8 *)0x0) {
+    puVar6 = malloc(0x30);
+  }
+  *puVar6 = "Disable edge marking   ";
+  *(undefined4 *)(puVar6 + 1) = 0x26;
+  puVar6[2] = draw_numeric;
+  puVar6[3] = action_numeric;
+  puVar6[4] = 0;
+  puVar6[5] = 0;
+  puVar7[6] = lVar8 + 0x49c;
+  puVar7[7] = 0x100000000;
+  puVar5[2] = draw_numeric_labeled;
+  puVar4[7] = puVar5;
+  puVar5[8] = yes_no_labels_11875;
+  puVar5 = malloc(0x48);
+  puVar7 = puVar5;
+  if (puVar5 == (undefined8 *)0x0) {
+    puVar7 = malloc(0x40);
+  }
+  puVar6 = puVar7;
+  if (puVar7 == (undefined8 *)0x0) {
+    puVar6 = malloc(0x30);
+  }
+  *puVar6 = "High-resolution 3D     ";
+  *(undefined4 *)(puVar6 + 1) = 0x27;
+  puVar6[2] = draw_numeric;
+  puVar6[3] = action_numeric;
+  puVar6[4] = 0;
+  puVar6[5] = 0;
+  puVar7[6] = lVar8 + 0x4a0;
+  puVar7[7] = 0x100000000;
+  puVar5[2] = draw_numeric_labeled;
+  puVar4[8] = puVar5;
+  puVar5[8] = yes_no_labels_11875;
+  return puVar3;
 }
 
 
