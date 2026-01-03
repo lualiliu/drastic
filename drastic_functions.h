@@ -73,11 +73,11 @@ extern "C" {
 
 // ==================== 全局变量声明 ====================
 
-extern uint uRam0000000000000048;
-extern long lRam0000000000000038;
-extern long lRam0000000000000040;
-extern undefined1 _DAT_0021d610[16];
-extern undefined1 _DAT_0021d600[16];
+uint uRam0000000000000048;
+long lRam0000000000000038;
+long lRam0000000000000040;
+undefined1 _DAT_0021d610[16];
+undefined1 _DAT_0021d600[16];
 
 // ==================== 内联函数/宏定义 ====================
 
