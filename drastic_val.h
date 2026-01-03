@@ -1200,7 +1200,8 @@ extern undefined load_oam_deferred_first16;
 // event_force_task_switch_function declared in drastic_functions.h
 // event_scanline_start_function declared in drastic_functions.h
 extern undefined event_dma_complete_function;
-extern undefined event_timer_overflow_function;
+// extern undefined event_timer_overflow_function;  // 已在 drastic_functions.h 中定义
+void event_timer_overflow_function(long param_1,long *param_2);
 extern undefined1 cycles_non_sequential_11154;
 extern undefined1 cycles_sequential_11153[256];
 extern undefined DAT_0021d610;
@@ -1222,7 +1223,8 @@ extern undefined4 frames_rendered_11416;
 extern undefined8 last_instructions_arm7_11415;
 extern undefined8 last_instructions_arm9_11414;
 extern undefined1 print_buffer_11412[128];
-extern undefined video_render_thread;
+// extern undefined video_render_thread;  // 已在 drastic_functions.h 中定义
+void video_render_thread(long param_1);
 extern undefined1 polygon_sort_list_15121[1576960];
 extern undefined DAT_0025f000;
 extern undefined1 tile_coordinate_flip_table;
@@ -1295,20 +1297,15 @@ undefined *benchmark_phase_names;
 extern undefined1 benchmark_phase_disable_names[56];
 extern undefined1 favorite_colors;
 extern undefined DAT_002217e8;
-extern undefined compare_file_info;
+// extern undefined compare_file_info;  // 已在 drastic_functions.h 中定义
+int compare_file_info(long *param_1,long *param_2);
 undefined *PTR_s_filename_002603d8;
 undefined *PTR_s_title_002603e0;
 undefined *PTR_s_rom_title_002603e8;
 //extern undefined compare_directory_names;
 //extern undefined compare_file_names;
 undefined *nds_ext;
-extern undefined draw_menu_option;
-extern undefined action_select;
-extern undefined action_select_menu;
-extern undefined destroy_select_menu;
-extern undefined draw_numeric;
-extern undefined action_numeric;
-extern undefined action_numeric_select;
+//extern undefined draw_menu_option;
 extern undefined draw_numeric_labeled;
 extern undefined action_input;
 extern undefined draw_input;
@@ -1340,16 +1337,8 @@ extern undefined1 language_labels_11938[64];
 extern undefined1 color_labels_11939[128];
 extern undefined1 birthday_month_labels_11940[96];
 extern undefined draw_menu_firmware;
-extern undefined select_restart;
-extern undefined select_cheat_menu;
-extern undefined select_save_state;
-extern undefined select_quit;
-extern undefined select_load_state;
-extern undefined select_return;
-extern undefined draw_menu_main;
-extern undefined modify_snapshot_bg;
-extern undefined focus_savestate;
-extern undefined select_load_game;
+// extern undefined draw_menu_main;  // 已在 drastic_functions.h 中定义
+void draw_menu_main(void);
 extern undefined1 speed_override_values_11981[32];
 extern undefined compare_cheat_entry_game_code;
 extern undefined DAT_00222f98;
@@ -1468,7 +1457,8 @@ extern undefined8 gui_actions;
 extern undefined4 cursor_repeat_37536;
 extern undefined8 button_repeat_timestamp_37534;
 extern undefined4 button_repeat_state_37535;
-extern undefined audio_callback;
+// extern undefined audio_callback;  // 已在 drastic_functions.h 中定义
+void audio_callback(ulong param_1,void *param_2,int param_3);
 extern undefined arm64_msr_cpsr_low;
 extern undefined arm64_msr_spsr;
 extern undefined1 psr_mask_immr_12090;
