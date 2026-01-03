@@ -5,10 +5,70 @@
 #ifndef DRASTIC_FUNCTIONS_H
 #define DRASTIC_FUNCTIONS_H
 
+#include <cstdint>
 //#include <stdio.h>
 #include "drastic_val.h"
 // SDL2
-#include <SDL2/SDL.h>
+#ifdef __has_include
+  #if __has_include(<SDL2/SDL.h>)
+    #include <SDL2/SDL.h>
+  #elif __has_include(<SDL.h>)
+    #include <SDL.h>
+  #else
+    // SDL2 not found, provide minimal declarations
+    typedef unsigned char Uint8;
+    typedef unsigned short Uint16;
+    typedef unsigned int Uint32;
+    typedef int Sint32;
+    typedef void* SDL_Window;
+    typedef void* SDL_Renderer;
+    typedef void* SDL_Texture;
+    typedef void* SDL_DisplayMode;
+    typedef void* SDL_Haptic;
+    typedef void* SDL_Joystick;
+    #define SDL_WINDOW_FULLSCREEN 0x00000001
+    #define SDL_WINDOW_SHOWN 0x00000004
+    #define SDL_RENDERER_ACCELERATED 0x00000002
+    #define SDL_TEXTUREACCESS_STREAMING 1
+    #define SDL_BLENDMODE_BLEND 1
+    #define SDL_PIXELFORMAT_RGBA8888 0x16362004
+    void SDL_PauseAudio(int pause_on);
+    void SDL_CaptureMouse(int enabled);
+    void* SDL_CreateRenderer(void* window, int index, Uint32 flags);
+    void* SDL_CreateTexture(void* renderer, Uint32 format, int access, int w, int h);
+    void* SDL_CreateWindow(const char* title, Uint32 x, Uint32 y, int w, int h, Uint32 flags);
+    void SDL_Delay(Uint32 ms);
+    void SDL_DestroyTexture(void* texture);
+    int SDL_GetCurrentDisplayMode(int displayIndex, void* mode);
+    const char* SDL_GetError(void);
+    const char* SDL_GetKeyName(int key);
+    Uint32 SDL_GetModState(void);
+    Uint32 SDL_GetTicks(void);
+    void* SDL_HapticOpen(int device_index);
+    void* SDL_HapticOpenFromJoystick(void* joystick);
+    int SDL_HapticRumbleInit(void* haptic);
+    int SDL_HapticRumblePlay(void* haptic, float strength, Uint32 length);
+    void SDL_SetHint(const char* name, const char* value);
+    void SDL_SetRenderDrawBlendMode(void* renderer, int blendMode);
+    void SDL_SetTextureBlendMode(void* texture, int blendMode);
+    void SDL_UpdateTexture(void* texture, const void* rect, const void* pixels, int pitch);
+    void SDL_SetWindowSize(void* window, int w, int h);
+    void SDL_RenderSetLogicalSize(void* renderer, int w, int h);
+    void SDL_SetWindowFullscreen(void* window, Uint32 flags);
+    void SDL_RenderGetLogicalSize(void* renderer, int* w, int* h);
+    void SDL_SetRenderDrawColor(void* renderer, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+    int SDL_Init(Uint32 flags);
+    void SDL_Quit(void);
+    int SDL_PollEvent(void* event);
+    void SDL_RenderClear(void* renderer);
+    void SDL_RenderCopy(void* renderer, void* texture, const void* srcrect, const void* dstrect);
+    void SDL_RenderPresent(void* renderer);
+    #define SDL_INIT_VIDEO 0x00000020
+    #define SDL_INIT_AUDIO 0x00000010
+  #endif
+#else
+  #include <SDL2/SDL.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -5221,7 +5281,7 @@ LAB_00120000:
             uVar28 = uVar28 + uVar9 * -2;
             puVar26 = puVar17;
             do {
-              uVar7 = (*(code *)pauVar34)(lVar30,(uVar31 + (int)puVar17) - (int)puVar26 & *puVar1);
+              uVar7 = ((undefined2 (*)(long, ulong))(*(code *)pauVar34))(lVar30,(uVar31 + (int)puVar17) - (int)puVar26 & *puVar1);
               puVar39 = puVar26 + -1;
               *puVar26 = uVar7;
               puVar26 = puVar39;
@@ -5234,7 +5294,7 @@ LAB_00120000:
               uVar8 = memory_check_code_region(lVar14,uVar15,uVar28,uVar9 * 2);
               local_30 = local_30 | uVar8;
             }
-            auVar40 = _DAT_0021d610;
+            memcpy(&auVar40, _DAT_0021d610, sizeof(auVar40));
             uVar8 = uVar9 - 1;
             uVar31 = uVar31 + uVar9 * 2;
             uVar28 = uVar28 + uVar9 * -2;
@@ -5298,8 +5358,8 @@ LAB_0011ffec:
           goto LAB_00120000;
         }
         pcVar33 = *(code **)(puVar2 + 10);
-        lVar14 = (**(code **)(puVar2 + 0x12))(lVar30,puVar2,uVar28);
-        uVar15 = (**(code **)(puVar2 + 0x14))(lVar30,puVar2,uVar28);
+        lVar14 = ((code_load_3args)(**(code **)(puVar2 + 0x12)))(lVar30,puVar2,uVar28);
+        uVar15 = ((code_load_3args)(**(code **)(puVar2 + 0x14)))(lVar30,puVar2,uVar28);
         local_38 = local_38 - uVar9;
         if (iVar24 == 2) {
           iVar24 = uVar9 * 2;

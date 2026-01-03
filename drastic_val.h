@@ -47,6 +47,10 @@ typedef unsigned long    undefined8;
 typedef unsigned short    ushort;
 //typedef int    wchar_t;
 typedef unsigned short    word;
+// 通用函数指针类型，用于反编译代码中的类型不匹配（放在类型定义之后）
+typedef ushort (*code_load_2args)(long, ulong);
+typedef uint (*code_load_3args)(long, void*, ulong);
+typedef void* (*code_ret_ptr_2args)(long, ulong);
 
 
 //Sundefined1 nds_system[62042112];
