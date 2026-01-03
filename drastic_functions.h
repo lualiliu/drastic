@@ -224,7 +224,7 @@ void config_default(undefined4 *param_1)
   *(undefined8 *)((long)param_1 + 0xd5e) = 0xffffffffffffffff;
   *(undefined8 *)((long)param_1 + 0xd66) = 0xffffffffffffffff;
   *(undefined2 *)((long)param_1 + 0xd6e) = 0xffff;
-  platform_set_default_controls(param_1 + 0x333,puVar4);
+  platform_set_default_controls((undefined8 *)(param_1 + 0x333),(undefined8 *)puVar4);
   set_screen_orientation(param_1[0x113]);
   set_screen_swap(param_1[0x115]);
   memset(__s,0,0x4000);
@@ -959,7 +959,7 @@ void select_load_game(long *param_1)
   long local_8;
   
   local_8 = __stack_chk_guard;
-  iVar2 = load_file(param_1,&nds_ext,auStack_428);
+  iVar2 = load_file(param_1,(long*)&nds_ext,auStack_428);
   if (iVar2 != -1) {
     lVar3 = *param_1;
     iVar2 = load_nds(lVar3 + 800,auStack_428);
@@ -1012,13 +1012,13 @@ void clear_screen(void)
 {
   undefined4 local_28;
   undefined4 uStack_24;
-  undefined1 auStack_20 [4];
+  undefined1 auStack_20[64];  // SDL_DisplayMode 大小，使用固定大小避免不完整类型错误
   undefined4 local_1c;
   undefined4 uStack_18;
   long local_8;
   
   local_8 = __stack_chk_guard;
-  SDL_GetCurrentDisplayMode(0,auStack_20,0);
+  SDL_GetCurrentDisplayMode(0,(SDL_DisplayMode*)auStack_20,0);
   SDL_RenderGetLogicalSize(DAT_04031578,&local_28,&uStack_24);
   SDL_RenderSetLogicalSize(DAT_04031578,local_1c,uStack_18);
   SDL_SetRenderDrawColor(DAT_04031578,0,0,0,0xffffffff);

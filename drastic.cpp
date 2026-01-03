@@ -1180,7 +1180,7 @@ LAB_0017fd50:
         draw_menu_bg(&local_598);
         uVar11 = 0;
         set_font_narrow();
-        print_string(local_535,0xa676,0,0x10);
+        print_string(local_535,0xa676,0,0x10,0);
         set_font_wide();
         if (*(int *)((long)puVar3 + 0x14) != 0) {
           do {
@@ -1660,7 +1660,8 @@ void free(void *__ptr)
 }
 
 // --- 函数: clear_screen ---
-
+// 已在 drastic_functions.h 中定义，注释掉以避免重定义
+/*
 void clear_screen(void)
 
 {
@@ -1690,6 +1691,7 @@ void clear_screen(void)
   }
   return;
 }
+*/
 
 // --- 函数: set_screen_hires_mode ---
 
@@ -3619,6 +3621,8 @@ void reset_cpu(long param_1)
 }
 
 // --- 函数: load_config_file ---
+// 已在 drastic_functions.h 中定义，注释掉以避免重定义
+/*
 void chomp_whitespace(char *param_1)
 
 {
@@ -3642,6 +3646,7 @@ void chomp_whitespace(char *param_1)
   }
   return;
 }
+*/
 
 undefined8 load_config_file(long param_1,undefined8 param_2,undefined4 param_3)
 
@@ -4502,7 +4507,8 @@ ulonglong strtoull(char *__nptr,char **__endptr,int __base)
 }
 
 // --- 函数: config_default ---
-
+// 已在 drastic_functions.h 中定义，注释掉以避免重定义
+/*
 void config_default(undefined4 *param_1)
 
 {
@@ -5193,10 +5199,10 @@ void menu_bios_warning(long param_1)
   snprintf(auStack_828,0x820,
                 "Could not load system files.\n\nDraStic requires the following files in the system directory\n(%s%csystem):\n\nnds_bios_arm9.bin            4KB\nnds_bios_arm7.bin            16KB\n\nThese files can be extracted from a Nintendo DS, by using a\nflash cart with homebrew such as the following:\n\n"
                 ,param_1 + 0x8a780,0x2f);
-  print_string(auStack_828,0xffff,0,100);
+  print_string(auStack_828,0xffff,0,100,0);
   set_font_wide();
   print_string("http://library.dev-scene.com/index.php?dir=DS/Hardware (Firmware) 07/DSBF dump/",
-               0xffff,0,100);
+               0xffff,0,100,0);
   update_screen_menu();
   update_screen_menu();
   update_screen_menu();
@@ -6555,7 +6561,8 @@ LAB_0018bc9c:
 }
 
 // --- 函数: load_logo ---
-
+// 已在 drastic_functions.h 中定义，注释掉以避免重定义
+/*
 void load_logo(long *param_1)
 
 {
@@ -7011,7 +7018,8 @@ void set_font_narrow(void)
 }
 
 // --- 函数: create_menu_main ---
-
+// 已在 drastic_functions.h 中定义，注释掉以避免重定义
+/*
 undefined8 * create_menu_main(long param_1)
 
 {
@@ -7197,6 +7205,7 @@ undefined8 * create_menu_main(long param_1)
   puVar10[9] = puVar6;
   return puVar1;
 }
+*/
 
 // --- 函数: CONCAT12 ---
 /*
@@ -7267,7 +7276,8 @@ undefined8 * create_menu_main(long param_1)
           }
 */
 // --- 函数: draw_menu_bg ---
-
+// 已在 drastic_functions.h 中定义，注释掉以避免重定义
+/*
 void draw_menu_bg(undefined8 *param_1)
 
 {
@@ -7292,7 +7302,7 @@ void draw_menu_bg(undefined8 *param_1)
     uVar2 = 0x160;
   }
   set_font_narrow_small();
-  print_string("Version r2.5.2.2",0xffff,0,uVar2);
+  print_string("Version r2.5.2.2",0xffff,0,uVar2,0);
   set_font_wide();
   if (*(int *)(param_1 + 8) != 0) {
     if ((*(long *)(param_1[2] + 0x28) == 0) && (*(int *)(param_1[2] + 0x18) == 5)) {
@@ -7300,7 +7310,7 @@ void draw_menu_bg(undefined8 *param_1)
       //savestate_index_timestamp(*param_1,*(undefined4 *)(param_1[1] + 0x458));
       set_font_narrow_small();
       if (local_10 == 0) {
-        print_string("(No savestate)",0xffff,0,0x220);
+        print_string("(No savestate)",0xffff,0,0x220,0);
         set_font_wide();
       }
       else {
@@ -7312,7 +7322,7 @@ void draw_menu_bg(undefined8 *param_1)
         load_state_index(*param_1,*(undefined4 *)(param_1[1] + 0x458),__s,__s_00,1);
         blit_screen_menu(__s,0x1d8,0x30,0x100,0xc0);
         blit_screen_menu(__s_00,0x1d8,0xf0,0x100,0xc0);
-        print_string(pcVar1,0xffff,0,0x1dc);
+        print_string(pcVar1,0xffff,0,0x1dc,0);
         free(__s);
         free(__s_00);
         set_font_wide();
@@ -7717,11 +7727,11 @@ LAB_0017b9b8:
   uVar31 = 0;
   *param_3 = '\0';
 LAB_0017b9d4:
-  print_string(acStack_700,0xffff,0,6);
-  print_string(auStack_6a8,0xffff,0,6);
-  print_string(auStack_628,0xffff,0,0x16e);
-  print_string(auStack_5a8,0xffff,0,6);
-  print_string(auStack_528,0xffff,0,0x16e);
+  print_string(acStack_700,0xffff,0,6,0);
+  print_string(auStack_6a8,0xffff,0,6,0);
+  print_string(auStack_628,0xffff,0,0x16e,0);
+  print_string(auStack_5a8,0xffff,0,6,0);
+  print_string(auStack_528,0xffff,0,0x16e,0);
   iVar5 = 0x14;
   uVar28 = uVar25;
   do {
@@ -7747,7 +7757,7 @@ LAB_0017b9d4:
       if ((uVar33 & 1) == 0 || uVar20 != uVar28) {
         uVar15 = 0;
       }
-      print_string(pcVar9,0xffff,uVar15,10);
+      print_string(pcVar9,0xffff,uVar15,10,0);
     }
     uVar1 = local_d0f0;
     pvVar18 = local_d100;
@@ -7855,7 +7865,7 @@ LAB_0017bc5c:
       if (uVar1 == 0) {
         uVar15 = 0;
       }
-      print_string(pcVar9,0xffff,uVar15,0x24b);
+      print_string(pcVar9,0xffff,uVar15,0x24b,0);
     }
     iVar5 = iVar5 + 0xf;
     uVar28 = uVar28 + 1;
@@ -8196,6 +8206,8 @@ LAB_0017c024:
   goto LAB_0017b584;
 }
 
+// 已在 drastic_functions.h 中定义，注释掉以避免重定义
+/*
 void select_load_game(long *param_1)
 
 {
@@ -8222,6 +8234,7 @@ void select_load_game(long *param_1)
   }
                     // WARNING: Subroutine does not return
 }
+*/
 
 // --- 函数: set_screen_menu_on ---
 
