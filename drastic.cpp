@@ -4604,6 +4604,7 @@ void config_default(undefined4 *param_1)
                     
   __stack_chk_fail();
 }
+*/
 
 // --- 函数: initialize_system_directories ---
 

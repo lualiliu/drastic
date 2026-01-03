@@ -96,6 +96,7 @@ typedef undefined2 (*code_load_func)(long, uint);  // 加载函数指针类型
 typedef void (*code_store_func)(long, uint, undefined2);  // 存储函数指针类型
 typedef long (*code_func_long)(long, long, ulong);  // 返回long的函数指针类型（3个参数）
 typedef ulong (*code_func_ulong)(long, long, ulong);  // 返回ulong的函数指针类型（3个参数）
+typedef void (*code_menu_action)(long*, long, int);  // 菜单动作函数指针类型（3个参数：long*, long, int）
 
 // ==================== 函数声明 ====================
 
@@ -124,6 +125,20 @@ void select_save_state(long *param_1);
 void select_quit(undefined8 *param_1);
 undefined4 platform_get_config_input(void);
 undefined4 load_nds(long param_1, char* param_2);
+// 菜单相关函数前向声明
+void draw_menu_controls(long *param_1, long param_2);
+void focus_menu_none(void);
+void draw_button_config(long param_1, undefined8 *param_2, int param_3);
+uint action_button_config(long param_1, long param_2, uint *param_3);
+void select_restore_default_controls(long param_1);
+void select_delete_config_local(long *param_1);
+void select_save_config_global(long *param_1);
+void select_save_config_local(long *param_1);
+void draw_input(long param_1, undefined8 *param_2, int param_3);
+uint action_input(long param_1, long param_2, uint *param_3);
+void draw_numeric_labeled(long param_1, undefined8 *param_2, int param_3);
+void draw_menu_firmware(long *param_1, long param_2);
+void draw_menu_options(undefined8 param_1, long param_2);
 
 // 注意：以下函数在 drastic_val.h 中已声明为 extern undefined（函数指针），
 // 因此不在此处重复声明，只提供函数定义
@@ -1018,7 +1033,7 @@ void clear_screen(void)
   long local_8;
   
   local_8 = __stack_chk_guard;
-  SDL_GetCurrentDisplayMode(0,(SDL_DisplayMode*)auStack_20,0);
+  SDL_GetCurrentDisplayMode(0,(SDL_DisplayMode*)auStack_20);
   SDL_RenderGetLogicalSize(DAT_04031578,&local_28,&uStack_24);
   SDL_RenderSetLogicalSize(DAT_04031578,local_1c,uStack_18);
   SDL_SetRenderDrawColor(DAT_04031578,0,0,0,0xffffffff);
@@ -14333,8 +14348,8 @@ void select_delete_config_local(long *param_1)
     unlink(acStack_828);
   }
   lVar1 = param_1[2];
-  if (*(code **)(lVar1 + 8) != (code *)0x0) {
-    (**(code **)(lVar1 + 8))(param_1,lVar1,1);
+  if (*(code_menu_action *)(lVar1 + 8) != (code_menu_action)0x0) {
+    (**(code_menu_action *)(lVar1 + 8))(param_1,lVar1,1);
   }
   lVar1 = *(long *)(lVar1 + 0x28);
   if (lVar1 == 0) {
@@ -14343,8 +14358,8 @@ void select_delete_config_local(long *param_1)
     }
   }
   else {
-    if (*(code **)(lVar1 + 8) != (code *)0x0) {
-      (**(code **)(lVar1 + 8))(param_1,lVar1,0);
+    if (*(code_menu_action *)(lVar1 + 8) != (code_menu_action)0x0) {
+      (**(code_menu_action *)(lVar1 + 8))(param_1,lVar1,0);
     }
     param_1[2] = lVar1;
   }
@@ -14380,8 +14395,8 @@ void select_save_config_global(long *param_1)
   puVar2[0x113] = uVar3;
   save_config_file(lVar1,"drastic.cfg",0);
   lVar1 = param_1[2];
-  if (*(code **)(lVar1 + 8) != (code *)0x0) {
-    (**(code **)(lVar1 + 8))(param_1,lVar1,1);
+  if (*(code_menu_action *)(lVar1 + 8) != (code_menu_action)0x0) {
+    (**(code_menu_action *)(lVar1 + 8))(param_1,lVar1,1);
   }
   lVar1 = *(long *)(lVar1 + 0x28);
   if (lVar1 == 0) {
@@ -14391,8 +14406,8 @@ void select_save_config_global(long *param_1)
     }
   }
   else {
-    if (*(code **)(lVar1 + 8) != (code *)0x0) {
-      (**(code **)(lVar1 + 8))(param_1,lVar1,0);
+    if (*(code_menu_action *)(lVar1 + 8) != (code_menu_action)0x0) {
+      (**(code_menu_action *)(lVar1 + 8))(param_1,lVar1,0);
     }
     param_1[2] = lVar1;
   }
@@ -14431,8 +14446,8 @@ void select_save_config_local(long *param_1)
     save_config_file(*param_1,auStack_428,1);
   }
   lVar3 = param_1[2];
-  if (*(code **)(lVar3 + 8) != (code *)0x0) {
-    (**(code **)(lVar3 + 8))(param_1,lVar3,1);
+  if (*(code_menu_action *)(lVar3 + 8) != (code_menu_action)0x0) {
+    (**(code_menu_action *)(lVar3 + 8))(param_1,lVar3,1);
   }
   lVar3 = *(long *)(lVar3 + 0x28);
   if (lVar3 == 0) {
@@ -14441,8 +14456,8 @@ void select_save_config_local(long *param_1)
     }
   }
   else {
-    if (*(code **)(lVar3 + 8) != (code *)0x0) {
-      (**(code **)(lVar3 + 8))(param_1,lVar3,0);
+    if (*(code_menu_action *)(lVar3 + 8) != (code_menu_action)0x0) {
+      (**(code_menu_action *)(lVar3 + 8))(param_1,lVar3,0);
     }
     param_1[2] = lVar3;
   }
