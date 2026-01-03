@@ -17,6 +17,14 @@
 #include "drastic_val.h"
 #include "drastic_functions.h"
 #include "drastic_cpu.h"
+// 确保SDL2类型可用
+#include <SDL2/SDL.h>
+// SDL_Rect 前向声明（如果SDL.h中没有定义）
+#ifndef SDL_Rect
+struct SDL_Rect {
+  int x, y, w, h;
+};
+#endif
 // 包含标准库（在自定义头文件之后）
 #include <stdio.h>
 #include <stdlib.h>
@@ -1086,7 +1094,7 @@ LAB_0017fcec:
   uVar5 = audio_pause(param_1 + 0x1587000);
   set_screen_menu_on();
   if (param_2 != 0) {
-    iVar7 = load_file(&local_598,&nds_ext,auStack_428);
+    iVar7 = load_file(&local_598,(long *)&nds_ext,auStack_428);
     lVar9 = local_598;
     if ((iVar7 != -1) && (iVar7 = load_nds(local_598 + 800,auStack_428), -1 < iVar7)) {
       local_548 = *(uint *)(lVar9 + 0x859f4);
@@ -3167,7 +3175,7 @@ void event_scanline_start_function(long *param_1)
     update_input(param_1 + 0xaaa);
     benchmark_step(param_1 + 0x11463);
     backup_auto_save_step(param_1 + 0x191);
-    gba_backup_auto_save_step(param_1 + 0xf8);
+    gba_backup_auto_save_step((char *)(param_1 + 0xf8));
     if ((((int)param_1[0x10b44] != 0) && ((*(uint *)(param_1 + 0x4ba089) & 1) != 0)) &&
        ((*(uint *)(param_1 + 0x4ba0e0) >> 7 & 1) == 0)) {
       process_cheats(param_1,param_1 + 0x69,(int)*param_1);
@@ -3219,7 +3227,7 @@ void event_scanline_start_function(long *param_1)
       update_frame_3d_1x(param_1 + 0x6da3d8,uVar2);
     }
     else {
-      video_3d_start_rendering();
+      video_3d_start_rendering(param_1 + 0x6da3d8, 0);
     }
     uVar9 = (uint)*(byte *)((long)param_1 + 0x35ef9a4);
   }
@@ -4564,7 +4572,7 @@ void config_default(undefined4 *param_1)
   *(undefined8 *)((long)param_1 + 0xd5e) = 0xffffffffffffffff;
   *(undefined8 *)((long)param_1 + 0xd66) = 0xffffffffffffffff;
   *(undefined2 *)((long)param_1 + 0xd6e) = 0xffff;
-  platform_set_default_controls(param_1 + 0x333,puVar4);
+  platform_set_default_controls((undefined8 *)(param_1 + 0x333),(undefined8 *)puVar4);
   set_screen_orientation(param_1[0x113]);
   set_screen_swap(param_1[0x115]);
   memset(__s,0,0x4000);
@@ -4697,7 +4705,7 @@ undefined8 initialize_audio(long param_1)
   local_44 = 0x8010;
   local_42 = 2;
   local_40 = (undefined2)(*(uint *)(param_1 + 0x40018) >> 2);
-  local_38 = audio_callback;
+  local_38 = (code *)audio_callback;
   lStack_30 = param_1;
   uVar1 = SDL_OpenAudio((SDL_AudioSpec*)&local_48,(SDL_AudioSpec*)local_28);
   *(undefined4 *)(param_1 + 0x40010) = local_28[0];
@@ -8198,7 +8206,7 @@ void select_load_game(long *param_1)
   long local_8;
   
   local_8 = __stack_chk_guard;
-  iVar2 = load_file(param_1,&nds_ext,auStack_428);
+  iVar2 = load_file(param_1,(long *)&nds_ext,auStack_428);
   if (iVar2 != -1) {
     lVar3 = *param_1;
     iVar2 = load_nds(lVar3 + 800,auStack_428);
