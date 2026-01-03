@@ -2331,7 +2331,7 @@ LAB_0016fa30:
     initialize_backup(lVar15,1,pvVar14,0x80000,auStack_828);
     *(undefined4 *)(param_1 + 0x2d80) = 0x204013;
 LAB_0016f770:
-    load_custom_cheats(param_1 + 0x28,lVar16);
+    //load_custom_cheats(param_1 + 0x28,lVar16);
     iVar12 = *(int *)(param_1 + 0x45c);
   }
   else {
@@ -2365,11 +2365,11 @@ LAB_0016f8ac:
     pvVar14 = malloc((ulong)uVar5);
     *(void **)(param_1 + 0x2d90) = pvVar14;
     initialize_backup(lVar15,bVar6,pvVar14,uVar5,auStack_828);
-    load_custom_cheats(param_1 + 0x28,lVar16);
+    //load_custom_cheats(param_1 + 0x28,lVar16);
     iVar12 = *(int *)(param_1 + 0x45c);
   }
   if (iVar12 != 0) {
-    load_cheat_listing(param_1 + 0x28,uVar9,~uVar10);
+    //load_cheat_listing(param_1 + 0x28,uVar9,~uVar10);
   }
   lVar15 = *(long *)(nds_system + lVar16 + 0x30d8930);
   uVar10 = ((*(int *)(param_1 + 0x930) + 1U >> 0x14) - 1) * 0x100 | 0xc2;
@@ -2422,10 +2422,10 @@ LAB_0016fb08:
     }
   }
   if (local_a84 == 4) {
-    memory_setup_slot2_motion(lVar1);
+    //memory_setup_slot2_motion(lVar1);
   }
   else if (local_a84 == 5) {
-    memory_setup_slot2_motion_hb(lVar1);
+    //memory_setup_slot2_motion_hb(lVar1);
   }
 LAB_0016f818:
   *(uint *)(lVar16 + 0x85a5c) = local_a84;
@@ -2438,46 +2438,6 @@ LAB_0016f818:
 }
 
 // --- 函数: reset_memory ---
-
-void map_memory_page_from_memory_map(long param_1,ulong param_2)
-
-{
-  long lVar1;
-  uint uVar2;
-  ulong uVar3;
-  long lVar4;
-  
-  uVar3 = param_2 >> 0xb & 0x1fffff;
-  uVar2 = (uint)param_2;
-  if (uVar2 < 0x10000000) {
-    lVar4 = (ulong)(uVar2 >> 0x17) * 0x60;
-    lVar1 = *(long *)(param_1 + 0x1000000) + lVar4;
-    if (*(char *)(lVar1 + 0x58) == '\0') {
-      lVar4 = *(long *)(lVar1 + 8) +
-              (ulong)(uVar2 & *(uint *)(*(long *)(param_1 + 0x1000000) + lVar4));
-      if (*(char *)(lVar1 + 0x59) == '\0') {
-        if (lVar4 != 0) {
-          *(long *)(param_1 + uVar3 * 8) = (long)(lVar4 - (param_2 & 0xffffffff)) >> 2;
-          return;
-        }
-      }
-      else if (lVar4 != 0) {
-        lVar4 = lVar4 - (param_2 & 0xffffffff);
-        goto LAB_001139a4;
-      }
-    }
-  }
-  else if ((0xfffeffff < uVar2) &&
-          (*(int *)(*(long *)(nds_system + param_1 + 0xb04010) + 0x210c) == 1)) {
-    lVar4 = (*(long *)(nds_system + param_1 + 0xb04008) + 0x10020 + (param_2 & 0xfff)) -
-            (param_2 & 0xffffffff);
-LAB_001139a4:
-    *(ulong *)(param_1 + uVar3 * 8) = lVar4 >> 2 | 0x4000000000000000;
-    return;
-  }
-  *(undefined8 *)(param_1 + uVar3 * 8) = 0x4000000000000000;
-  return;
-}
 
 void reset_memory(long *param_1)
 
@@ -3180,7 +3140,7 @@ void event_scanline_start_function(long *param_1)
     gba_backup_auto_save_step((char *)(param_1 + 0xf8));
     if ((((int)param_1[0x10b44] != 0) && ((*(uint *)(param_1 + 0x4ba089) & 1) != 0)) &&
        ((*(uint *)(param_1 + 0x4ba0e0) >> 7 & 1) == 0)) {
-      process_cheats(param_1,param_1 + 0x69,(int)*param_1);
+      //process_cheats(param_1,param_1 + 0x69,(int)*param_1);
     }
     platform_set_rumble_state(uVar7);
     param_1[0x2b8fa1] = param_1[1];
@@ -3226,7 +3186,7 @@ void event_scanline_start_function(long *param_1)
       uVar2 = 1;
     }
     if ((int)param_1[0x10b42] == 0) {
-      update_frame_3d_1x(param_1 + 0x6da3d8,uVar2);
+      //update_frame_3d_1x(param_1 + 0x6da3d8,uVar2);
     }
     else {
       video_3d_start_rendering(param_1 + 0x6da3d8, 0);
@@ -3343,7 +3303,7 @@ void reset_video(long *param_1)
     if ((uint)bVar1 != *(uint *)((long)plVar5 + 0x14)) {
       lVar4 = (param_1 + 0x414)[uVar9];
       *(undefined2 *)(param_1 + 0x5ce) = 0;
-      remap_vram_body(param_1,lVar4,uVar9 & 0xffffffff,bVar1,1);
+      //remap_vram_body(param_1,lVar4,uVar9 & 0xffffffff,bVar1,1);
       uVar7 = (uint)*(ushort *)(param_1 + 0x5ce);
       if (*(ushort *)(param_1 + 0x5ce) != 0) {
         uVar8 = 0;
@@ -3351,8 +3311,8 @@ void reset_video(long *param_1)
           if ((uVar7 & 1) != 0) {
             uVar6 = (ulong)uVar8;
             *(undefined4 *)((long)param_1 + uVar6 * 0x10 + 0x14) = 0xffffffff;
-            remap_vram_body(param_1,param_1[uVar6 + 0x414],uVar8,
-                            *(undefined1 *)param_1[uVar6 + 0x41d],0);
+            //remap_vram_body(param_1,param_1[uVar6 + 0x414],uVar8,
+            //                *(undefined1 *)param_1[uVar6 + 0x41d],0);
           }
           uVar7 = uVar7 >> 1;
           uVar8 = uVar8 + 1;

@@ -1,1 +1,1 @@
-g++ drastic.cpp -o drastic.o -fpermissive -I. -lSDL2
+g++ drastic.cpp -g -o drastic -fpermissive -I. -lSDL2 
