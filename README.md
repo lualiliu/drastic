@@ -44,6 +44,8 @@ Welcome to improve and resolve the code!
 
 the source_ref.cpp is decompiled reference code.
 
+the original binary : https://raw.githubusercontent.com/ROCKNIX/packages/main/drastic.tar.gz
+
 
 
 
