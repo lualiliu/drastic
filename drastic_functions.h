@@ -5,9 +5,10 @@
 #ifndef DRASTIC_FUNCTIONS_H
 #define DRASTIC_FUNCTIONS_H
 
-//#include <stdio.h>
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/time.h>
 #include "drastic_val.h"
 // SDL2
 #include <SDL2/SDL.h>
@@ -621,6 +622,10 @@ undefined8 get_screen_ptr(uint param_1)
   long lVar1;
   
   //if (DAT_040315d4._4_4_ != 0) {
+    if (DAT_04031598 == NULL) {
+      fprintf(stderr, "WARNING: get_screen_ptr: DAT_04031598 is NULL!\n");
+      fflush(stderr);
+    }
     return DAT_04031598;
   //}
   lVar1 = (ulong)(param_1 ^ (uint)DAT_040315cc) * 0x28;
@@ -1219,7 +1224,17 @@ void clear_screen_menu(undefined2 param_1)
   undefined8 *puVar6;
   
   puVar1 = (undefined8 *)get_screen_ptr(0);
+  if (puVar1 == NULL) {
+    fprintf(stderr, "ERROR: clear_screen_menu: get_screen_ptr returned NULL\n");
+    fflush(stderr);
+    return;
+  }
   uVar2 = get_screen_pitch(0);
+  if (uVar2 == 0) {
+    fprintf(stderr, "WARNING: clear_screen_menu: get_screen_pitch returned 0, using default 0x640\n");
+    fflush(stderr);
+    uVar2 = 0x640;
+  }
   puVar4 = puVar1 + 200;
   iVar5 = 0x1e0;
   puVar6 = puVar1;
@@ -2611,7 +2626,8 @@ int getopt_long(int argc, char* const argv[], const char* optstring, const struc
 
 int getpagesize(void);
 
-int gettimeofday(timeval __tv, __timezone_ptr_t __tz);
+// gettimeofday is declared in <sys/time.h>, no need to redeclare
+// int gettimeofday(struct timeval *__tv, struct timezone *__tz);
 
 
 void * icon_cache_add(long *param_1,FILE *param_2,void *param_3,char *param_4)
@@ -2752,7 +2768,14 @@ void initialize_input(long param_1, undefined8 param_2);
 
 undefined8 initialize_lua(long param_1);
 
-void initialize_rtc(undefined8 param_1, undefined8 param_2);
+// --- 函数: initialize_rtc ---
+
+void initialize_rtc(undefined8 *param_1,undefined8 param_2)
+
+{
+  *param_1 = param_2;
+  return;
+}
 
 void initialize_screen(uint param_1);
 
@@ -2768,7 +2791,91 @@ void initialize_system_directory(long param_1,const char* param_2);
 
 int initialize_translation_cache(void* param_1);
 
-void initialize_video(long param_1, long param_2);
+
+// --- 函数: initialize_video ---
+
+void initialize_video(long *param_1,long param_2)
+
+{
+  long lVar1;
+  long lVar2;
+  long lVar3;
+  long lVar4;
+  long lVar5;
+  long lVar6;
+  long lVar7;
+  long lVar8;
+  long lVar9;
+  long lVar10;
+  
+  lVar1 = *(long *)(param_2 + 0xfba68);
+  lVar2 = *(long *)(param_2 + 0x15020);
+  lVar10 = *(long *)(param_2 + 0x15028);
+  lVar9 = *(long *)(param_2 + 0x15030);
+  lVar8 = *(long *)(param_2 + 0x15038);
+  lVar7 = *(long *)(param_2 + 0x15040);
+  lVar6 = *(long *)(param_2 + 0x15048);
+  lVar5 = *(long *)(param_2 + 0x15050);
+  lVar4 = *(long *)(param_2 + 0x15058);
+  lVar3 = *(long *)(param_2 + 0x15060);
+  *param_1 = param_2;
+  param_1[1] = lVar1 + 0x855a8;
+  param_1[0x414] = lVar2;
+  param_1[0x415] = lVar10;
+  param_1[0x416] = lVar9;
+  param_1[0x417] = lVar8;
+  param_1[0x418] = lVar7;
+  param_1[0x419] = lVar6;
+  param_1[0x41a] = lVar5;
+  param_1[0x41b] = lVar4;
+  param_1[0x41c] = lVar3;
+  param_1[0x41d] = param_2 + 0x1b2b0;
+  param_1[0x41e] = param_2 + 0x1b2b1;
+  param_1[0x41f] = param_2 + 0x1b2b2;
+  param_1[0x420] = param_2 + 0x1b2b3;
+  param_1[0x421] = param_2 + 0x1b2b4;
+  param_1[0x422] = param_2 + 0x1b2b5;
+  param_1[0x423] = param_2 + 0x1b2b6;
+  param_1[0x424] = param_2 + 0x1b2b8;
+  param_1[0x425] = param_2 + 0x1b2b9;
+  param_1[0x5ca] = param_2 + 0x16070;
+  param_1[0x5cb] = param_2 + 0x16470;
+  param_1[0x5cc] = param_2 + 0x15070;
+  param_1[0x5cd] = param_2 + 0x15470;
+  param_1[0x8b10f] = 0;
+  // 初始化 video_render_thread 使用的互斥锁和条件变量（必须在创建线程之前）
+  // 注意：互斥锁直接存储在 param_1 指向的结构中
+  // video_render_thread 使用 polygon_sort_list_13776 + param_1 + offset
+  // 但 polygon_sort_list_13776 只有 790528 字节，而 param_1 相对于 nds_system 的偏移量可能很大
+  // 因此互斥锁应该直接存储在 param_1 指向的结构中
+  // 计算 param_1 相对于 nds_system 的偏移量，用于传递给 video_render_thread
+  long offset = (long)((char*)param_1 - (char*)nds_system);
+  // 直接使用 param_1 作为基址初始化互斥锁和条件变量
+  pthread_mutex_init((pthread_mutex_t *)((char*)param_1 + 0x6e260),(pthread_mutexattr_t *)0x0);
+  pthread_mutex_init((pthread_mutex_t *)((char*)param_1 + 0x6e290),(pthread_mutexattr_t *)0x0);
+  pthread_cond_init((pthread_cond_t *)((char*)param_1 + 0x6e2c0),(pthread_condattr_t *)0x0);
+  pthread_cond_init((pthread_cond_t *)((char*)param_1 + 0x6e2f0),(pthread_condattr_t *)0x0);
+  // 初始化其他互斥锁和条件变量
+  pthread_mutex_init((pthread_mutex_t *)(param_1 + 0x8b114),(pthread_mutexattr_t *)0x0);
+  pthread_mutex_init((pthread_mutex_t *)(param_1 + 0x8b11a),(pthread_mutexattr_t *)0x0);
+  pthread_cond_init((pthread_cond_t *)(param_1 + 0x8b120),(pthread_condattr_t *)0x0);
+  pthread_cond_init((pthread_cond_t *)(param_1 + 0x8b126),(pthread_condattr_t *)0x0);
+  // 现在可以安全地创建线程
+  // 传递偏移量值，而不是指针值
+  pthread_create((pthread_t *)(param_1 + 0x8b113),(pthread_attr_t *)0x0,video_render_thread,(void*)offset)
+  ;
+  *(undefined2 *)(param_1 + 0x8b12c) = 0;
+  initialize_video_2d(param_1 + 0x5cf,0,param_1);
+  initialize_video_2d(param_1 + 0x10853,1,param_1);
+  initialize_geometry(param_1 + 0x6ad9e,*(undefined8 *)(*param_1 + 0xfba68),param_1 + 0x69d98);
+  initialize_texture_cache(param_1 + 0x69d98,param_1);
+  //initialize_video_3d(param_1);
+  param_1[0x8b105] = 0;
+  param_1[0x8b104] = 0;
+  param_1[0x8b107] = 0;
+  param_1[0x8b106] = 0;
+  return;
+}
 
 int initialize_video_3d(void* param_1);
 
@@ -4039,7 +4146,7 @@ LAB_00174818:
       }
     }
     else if (param_5 != 1 || iVar8 != -5) {
-      printf("Error: uncompress returned error code %d\n");
+      printf("Error: uncompress returned error code %d\n", iVar8);
       goto LAB_00174818;
     }
 LAB_001749a4:
@@ -10677,10 +10784,25 @@ LAB_0011d418:
 void execute_cpu(long param_1)
 
 {
-  execute_cpu(*(long *)(param_1 + 0x2258));
+  // 修复：添加空指针检查，避免段错误
+  if (param_1 == 0) {
+    fprintf(stderr, "ERROR: execute_cpu called with null pointer\n");
+    return;
+  }
+  
+  long next_cpu_ptr = *(long *)(param_1 + 0x2258);
+  if (next_cpu_ptr != 0) {
+    execute_cpu(next_cpu_ptr);
+  }
                     // WARNING: Could not recover jumptable at 0x00128258. Too many branches
                     // WARNING: Treating indirect jump as call
-  (**(code1 **)(param_1 + 0x23b0))(*(undefined8 *)(param_1 + 0x2258));
+  code1 **func_ptr_ptr = (code1 **)(param_1 + 0x23b0);
+  if (func_ptr_ptr != nullptr && *func_ptr_ptr != nullptr) {
+    code1 func_ptr = **func_ptr_ptr;
+    if (func_ptr != nullptr) {
+      func_ptr(*(undefined8 *)(param_1 + 0x2258));
+    }
+  }
   return;
 }
 
@@ -11128,7 +11250,7 @@ LAB_00173768:
     pcVar8 = local_618;
     if (((iVar5 == -1) || (iVar5 = strcasecmp(local_618,"database"), iVar5 != 0)) ||
        (local_40c != '\0')) {
-      sprintf(auStack_308,1,0x100,"Wrong tag name: expected database, got %s\n",pcVar8);
+      __sprintf_chk(auStack_308,1,0x100,"Wrong tag name: expected database, got %s\n",pcVar8);
       uVar14 = 2;
       goto LAB_00173768;
     }
@@ -11342,7 +11464,7 @@ LAB_00173550:
           else {
             iVar6 = strcasecmp(pcVar8,"nand");
             if (iVar6 != 0) {
-              sprintf(auStack_308,1,0x100,"Unknown save type %s.\n",pcVar8);
+              __sprintf_chk(auStack_308,1,0x100,"Unknown save type %s.\n",pcVar8);
               goto LAB_00173810;
             }
             uVar4 = 3;
@@ -11456,7 +11578,7 @@ LAB_00173694:
                (uVar21 = uVar21 + 1, uVar7 <= uVar21)) goto LAB_001736f8;
           } while( true );
         }
-        sprintf(auStack_308,1,0x100,"Expected closing cartridge and got (%s, %d)\n",pcVar8,
+        __sprintf_chk(auStack_308,1,0x100,"Expected closing cartridge and got (%s, %d)\n",pcVar8,
                       local_40c);
       }
     }
@@ -11641,6 +11763,8 @@ void initialize_video_2d(long *param_1,uint param_2,long *param_3)
 int initialize_video_3d(void *param_1)
 
 {
+  return -1;
+/*
   uint uVar1;
   uint uVar2;
   int iVar3;
@@ -11699,6 +11823,7 @@ int initialize_video_3d(void *param_1)
     lVar5 = lVar5 + 1;
     puVar6 = puVar6 + 0x4820;
   } while( true );
+   */
 }
 
 // Function: input_log_close
@@ -15347,23 +15472,28 @@ void video_render_thread(long param_1)
   pthread_mutex_t *__mutex;
   char cVar1;
   
-  __mutex = (pthread_mutex_t *)(polygon_sort_list_13776 + param_1 + 0x6e260);
+  // param_1 是相对于 nds_system 的偏移量
+  if (nds_system == nullptr) {
+    fprintf(stderr, "ERROR: nds_system is nullptr in video_render_thread\n");
+    return;
+  }
+  __mutex = (pthread_mutex_t *)(nds_system + param_1 + 0x6e260);
   do {
     pthread_mutex_lock(__mutex);
-    cVar1 = polygon_sort_list_13776[param_1 + 0x6e320];
+    cVar1 = nds_system[param_1 + 0x6e320];
     while ((cVar1 == '\0' &&
-           (pthread_cond_wait((pthread_cond_t *)(polygon_sort_list_13776 + param_1 + 0x6e2c0),
-                              __mutex), polygon_sort_list_13776[param_1 + 0x6e320] == '\0'))) {
-      pthread_cond_wait((pthread_cond_t *)(polygon_sort_list_13776 + param_1 + 0x6e2c0),__mutex);
-      cVar1 = polygon_sort_list_13776[param_1 + 0x6e320];
+           (pthread_cond_wait((pthread_cond_t *)(nds_system + param_1 + 0x6e2c0),
+                              __mutex), nds_system[param_1 + 0x6e320] == '\0'))) {
+      pthread_cond_wait((pthread_cond_t *)(nds_system + param_1 + 0x6e2c0),__mutex);
+      cVar1 = nds_system[param_1 + 0x6e320];
     }
-    polygon_sort_list_13776[param_1 + 0x6e320] = 0;
+    nds_system[param_1 + 0x6e320] = 0;
     pthread_mutex_unlock(__mutex);
-    video_2d_render_scanlines(param_1 + 0x84298,0,0xbf,0);
-    pthread_mutex_lock((pthread_mutex_t *)(polygon_sort_list_13776 + param_1 + 0x6e290));
-    polygon_sort_list_13776[param_1 + 0x6e321] = 1;
-    pthread_cond_signal((pthread_cond_t *)(polygon_sort_list_13776 + param_1 + 0x6e2f0));
-    pthread_mutex_unlock((pthread_mutex_t *)(polygon_sort_list_13776 + param_1 + 0x6e290));
+    video_2d_render_scanlines((undefined8 *)(nds_system + param_1 + 0x84298),0,0xbf,0);
+    pthread_mutex_lock((pthread_mutex_t *)(nds_system + param_1 + 0x6e290));
+    nds_system[param_1 + 0x6e321] = 1;
+    pthread_cond_signal((pthread_cond_t *)(nds_system + param_1 + 0x6e2f0));
+    pthread_mutex_unlock((pthread_mutex_t *)(nds_system + param_1 + 0x6e290));
   } while( true );
 }
 
@@ -15481,7 +15611,21 @@ void initialize_coprocessor(long *param_1,long param_2)
 {
   long lVar1;
   
-  lVar1 = *(long *)(nds_system + param_2 + 0xb063d8);
+  // param_2 是绝对地址 (nds_system + 0x15c7d50)，需要计算正确的偏移量
+  // 要访问 nds_system + 0xb063d8，使用 param_2 - 0x15c7d50 + 0xb063d8
+  // 即 param_2 + (0xb063d8 - 0x15c7d50) = param_2 - 0xab7718
+  if (nds_system == nullptr) {
+    fprintf(stderr, "ERROR: nds_system is nullptr in initialize_coprocessor\n");
+    return;
+  }
+  // 计算相对于 nds_system 的偏移量
+  long offset = param_2 - (long)nds_system;
+  if (offset < 0 || offset >= 62042112) {
+    fprintf(stderr, "ERROR: Invalid offset %ld in initialize_coprocessor (param_2=%p, nds_system=%p)\n", 
+            offset, (void*)param_2, (void*)nds_system);
+    return;
+  }
+  lVar1 = *(long *)(nds_system + offset + 0xb063d8);
   *param_1 = param_2;
   param_1[1] = lVar1;
   return;
@@ -15958,7 +16102,7 @@ undefined8 load_system_file(long param_1,undefined8 param_2,void *param_3,int pa
   long local_8;
   
   local_8 = __stack_chk_guard;
-  sprintf(acStack_428,1,0x420,"%s%csystem%c%s",param_1 + 0x8a780,0x2f,0x2f,param_2);
+  __sprintf_chk(acStack_428,1,0x420,"%s%csystem%c%s",param_1 + 0x8a780,0x2f,0x2f,param_2);
   __stream = fopen(acStack_428,"rb");
   if (__stream == (FILE *)0x0) {
     printf("***Failed to load system file %s.\n",param_2);

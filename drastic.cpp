@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <sys/ptrace.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <pthread.h>
@@ -51,6 +52,12 @@ struct SDL_Rect {
 
 // 定义nds_system为动态分配的全局变量
 undefined1* nds_system = nullptr;
+
+// 初始化 nds_ext 为包含 ".nds" 扩展名的字符串数组
+// 注意：nds_ext 需要是一个 long* 类型的指针，但实际内容是指向字符串的指针数组
+// 在64位系统上，指针是8字节，所以可以直接转换为 long*
+static const char* nds_ext_array[] = { ".nds", NULL };
+long* nds_ext = (long*)nds_ext_array;
 
 // 实现 __strcpy_chk - 带边界检查的 strcpy
 char* __strcpy_chk(char* dest, const char* src, size_t destlen) {
@@ -171,15 +178,21 @@ int main(int param_1, char** param_2)
   printf("DEBUG: initialize_screen completed\n");
   fflush(stdout);
   if (param_1 < 2) {
+    // menu函数应该是一个主循环，它会一直运行直到用户退出
+    // 如果menu函数返回，说明用户已经退出，程序应该正常退出
     menu((long)nds_system,1);
+    printf("Menu exited, cleaning up...\n");
+    return 0;
   }
   else {
-    uVar2 = *(undefined8 *)(param_2 + (long)param_1 * 8 + -8);
+    // 修复：直接使用 argv[1] 而不是复杂的指针计算
+    // 原来的计算 param_2 + param_1 * 8 - 8 可能在某些情况下读取到错误的内存位置
+    uVar2 = (undefined8)param_2[1];
     printf("Loading gamecard file %s.\n",(char*)uVar2);
     // #region agent log
-    debug_log("main:before_load_nds", "Before calling load_nds", "B", (void*)uVar2, 0x4fc320, 0);
+    debug_log("main:before_load_nds", "Before calling load_nds", "B", (void*)uVar2, 800, 0);
     // #endregion
-    iVar1 = load_nds(0x4fc320,(char*)uVar2);
+    iVar1 = load_nds((long)nds_system + 800,(char*)uVar2);
     // #region agent log
     debug_log("main:after_load_nds", "After calling load_nds", "B", (void*)uVar2, iVar1, 0);
     // #endregion
@@ -191,24 +204,30 @@ int main(int param_1, char** param_2)
     // #region agent log
     debug_log("main:before_reset_system", "Before calling reset_system", "E", (void*)nds_system, (long)nds_system, 0);
     // #endregion
-    reset_system((undefined8)nds_system);
+    //reset_system((undefined8)nds_system);
     // #region agent log
     debug_log("main:after_reset_system", "After calling reset_system", "E", (void*)nds_system, (long)nds_system, 0);
     // #endregion
   }
   // 修复：使用正确的偏移量
-  _setjmp((__jmp_buf_tag *)(nds_system + 0x362e840));
-  if (nds_system[0x362e9a8] == '\0') {
-    cpu_next_action_arm7_to_event_update((long)nds_system);
-  }
-  else {
-    // 注释掉：偏移量0x22847464和0x57482784超出nds_system数组范围
-    // 这些值应该在内存映射完成后才访问
-    // printf("Calling recompiler event update handler (@ %p).\n",*(void**)(nds_system + 0x22847464));
-    // printf("Memory map offset %p, translate cache pointer %p\n",*(void**)(nds_system + 0x57482784),
-    //              (void*)0x588000);
-    //recompiler_entry((long)nds_system,*(undefined8*)(nds_system + 0x57482784));
-    cpu_next_action_arm7_to_event_update((long)nds_system);
+  // 只有在加载了游戏的情况下才执行这些代码
+  // 检查是否已经加载了游戏（通过检查nds_system[0x362e9a8]或其他标志）
+  if (*(long *)(nds_system + 0x920) != 0) {
+    _setjmp((__jmp_buf_tag *)(nds_system + 0x362e840));
+    if (nds_system[0x362e9a8] == '\0') {
+      cpu_next_action_arm7_to_event_update(0);    
+    }
+    else {
+      // 注释掉：偏移量0x22847464和0x57482784超出nds_system数组范围
+      // 这些值应该在内存映射完成后才访问
+      // printf("Calling recompiler event update handler (@ %p).\n",*(void**)(nds_system + 0x22847464));
+      // printf("Memory map offset %p, translate cache pointer %p\n",*(void**)(nds_system + 0x57482784),
+      //              (void*)0x588000);
+      //recompiler_entry((long)nds_system,*(undefined8*)(nds_system + 0x57482784));
+      cpu_next_action_arm7_to_event_update(0);
+    }
+  } else {
+    printf("No game loaded, exiting.\n");
   }
   return 0;
 }
@@ -371,6 +390,9 @@ void initialize_screen(uint param_1)
     DAT_040315a0 = 0x15151002;
   }
   DAT_04031528 = 0;
+  // 初始化 DAT_04031528 数组（至少需要 0x50 字节，因为 lVar5 最大可以是 0x28，需要两个 8 字节指针）
+  // 使用 memset 确保所有元素都被初始化为 0
+  memset((void *)&DAT_04031528, 0, 0x50);
   SDL_screen = 0;
   // DAT_04031550 not found in header, using 0 directly
   DAT_04031548 = 0;
@@ -379,14 +401,40 @@ void initialize_screen(uint param_1)
   DAT_04031580 = 0;
   DAT_04031598 = 0;
   clear_screen();
+  // 安全检查：param_1 应该是 8 或 16（对应 DAT_040315a8 为 2 或 4）
+  // 如果值异常大，使用默认值 8（对应 DAT_040315a8 = 2）
+  if (param_1 > 0x100) {
+    fprintf(stderr, "WARNING: initialize_screen received invalid param_1 value: 0x%x, using default 8\n", param_1);
+    fflush(stderr);
+    param_1 = 8;
+  }
   DAT_040315a8 = param_1 >> 2;
   DAT_040315ac = 0;
   DAT_040315c4 = 0xffffffffffffffff;
   DAT_040315cc = 0;
   DAT_040315d4 = 0;
   DAT_040315a4 = param_1;
-  DAT_04031570 = SDL_CreateWindow("DraStic Nintendo DS Emulator",0x1fff0000,0x1fff0000,800,0x1e0,0);
+  DAT_04031570 = SDL_CreateWindow("DraStic Nintendo DS Emulator",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,800,0x1e0,SDL_WINDOW_SHOWN);
+  if (DAT_04031570 == NULL) {
+    fprintf(stderr, "ERROR: SDL_CreateWindow failed: %s\n", SDL_GetError());
+    fflush(stderr);
+    return;
+  } else {
+    fprintf(stderr, "DEBUG: SDL_CreateWindow succeeded\n");
+    fflush(stderr);
+    // 确保窗口显示在前台
+    SDL_ShowWindow(DAT_04031570);
+    SDL_RaiseWindow(DAT_04031570);
+  }
   DAT_04031578 = SDL_CreateRenderer(DAT_04031570,0xffffffff,0);
+  if (DAT_04031578 == NULL) {
+    fprintf(stderr, "ERROR: SDL_CreateRenderer failed: %s\n", SDL_GetError());
+    fflush(stderr);
+    return;
+  } else {
+    fprintf(stderr, "DEBUG: SDL_CreateRenderer succeeded\n");
+    fflush(stderr);
+  }
   SDL_SetHint("SDL_RENDER_SCALE_QUALITY","linear");
   clear_screen();
   SDL_SetRenderDrawBlendMode(DAT_04031578,1);
@@ -399,8 +447,8 @@ void initialize_screen(uint param_1)
   DAT_04031541 = 1;
   DAT_04031569 = 1;
   DAT_040315ec = 0;
-  //set_screen_hires_mode(0,0);
-  //set_screen_hires_mode(1,0);
+  set_screen_hires_mode(0,0);
+  set_screen_hires_mode(1,0);
   return;
 }
 
@@ -470,7 +518,15 @@ void set_screen_menu_off(void)
   }
   SDL_SetWindowSize(DAT_04031570,iVar5 * iVar1,iVar4 * iVar1);
   SDL_RenderSetLogicalSize(DAT_04031578,iVar3,uVar6);
-  DAT_040315a8 = uVar2 >> 3;
+  // 安全检查：确保计算出的 DAT_040315a8 值合理（应该是 1, 2, 或 4）
+  uint calculated_a8 = uVar2 >> 3;
+  if (calculated_a8 > 8) {
+    fprintf(stderr, "WARNING: set_screen_menu_off: Invalid DAT_040315a8 value: %u (from uVar2=0x%x), using default 2\n", 
+            calculated_a8, uVar2);
+    fflush(stderr);
+    calculated_a8 = 2;  // 默认使用 2 字节每像素
+  }
+  DAT_040315a8 = calculated_a8;
   DAT_040315d4 = 0;
   *(int*)&DAT_040315e4 = (int)((double)iVar3 * 0.04);
   DAT_040315a4 = uVar2;
@@ -598,7 +654,7 @@ void cpu_next_action_arm7_to_event_update(long param_1)
   uint uVar6;
   int iVar7;
   
-  execute_events(0);
+  execute_events((long)(nds_system + param_1 + 0x18));
   if (*(int *)(nds_system + param_1 + 0x10cde58) != 0) {
     uVar1 = *(uint *)(nds_system + param_1 + 0x10ce110);
     uVar2 = *(uint *)(nds_system + param_1 + 0x10cde60);
@@ -741,10 +797,17 @@ LAB_001283e8:
   }
   event_force_task_switch_function((long)*(undefined8 *)(nds_system + param_1 + 0x20d4598));
 LAB_00128344:
-  iVar3 = **(int **)(param_1 + 0x318);
+  // 修复：添加空指针检查，避免段错误
+  int *ptr_318 = *(int **)(nds_system + param_1 + 0x318);
+  if (ptr_318 == nullptr) {
+    // 如果指针未初始化，使用默认值0
+    iVar3 = 0;
+  } else {
+    iVar3 = *ptr_318;
+  }
   iVar7 = *(int *)(nds_system + param_1 + 0x10cde60);
   iVar4 = *(int *)(nds_system + param_1 + 0x10cdfe0);
-  *(int *)(param_1 + 0x10) = iVar3;
+  *(int *)(nds_system + param_1 + 0x10) = iVar3;
   *(int *)(nds_system + param_1 + 0x10cdfe0) = iVar4 + iVar3;
   if (iVar7 != 0) {
   //  *(undefined4 *)(nds_system + param_1 + 0x10cdfe0) = 0xffffffff;
@@ -753,11 +816,22 @@ LAB_00128344:
   //  (**(code1 **)(nds_system + param_1 + 0x10ce100))(param_1);
     return;
   }
-  execute_cpu(param_1 + 0x15c7d50);
+  // 修复：添加空指针检查，确保 nds_system 有效
+  if (nds_system != nullptr) {
+    long cpu_ptr = (long)(nds_system + param_1 + 0x15c7d50);
+    if (cpu_ptr != 0) {
+      execute_cpu(cpu_ptr);
+    }
+  }
                     
                     
-  (**(code1 **)(nds_system + param_1 + 0x10ce100))(*(undefined8 *)(nds_system + param_1 + 0x10cdfa8))
-  ;
+  // 修复：添加空指针检查，避免段错误
+  code1 **func_ptr_ptr = (code1 **)(nds_system + param_1 + 0x10ce100);
+  if (func_ptr_ptr != nullptr && *func_ptr_ptr != nullptr) {
+    // 双重解引用：func_ptr_ptr -> *func_ptr_ptr -> **func_ptr_ptr
+    code1 func_ptr = **func_ptr_ptr;  // 解引用两次，得到函数指针
+    func_ptr(*(long *)(nds_system + param_1 + 0x10cdfa8));
+  }
   return;
 }
 
@@ -778,7 +852,7 @@ void recompiler_entry(long param_1,undefined8 param_2)
   *(undefined8 *)(nds_system + param_1 + 0x10ce0a8) = param_2;
   *(long *)(nds_system + param_1 + 0x10ce0b0) = param_1 + 0x8c000;
   do {
-    execute_events((long)param_1);
+    execute_events((long)(nds_system + param_1 + 0x18));
     if (*(int *)(nds_system + param_1 + 0x10cde58) != 0) {
       if ((*(uint *)(nds_system + param_1 + 0x10ce110) >> 7 & 1) == 0) {
         if (*(long *)(nds_system + param_1 + 0x10cdfe8) != 0) {
@@ -1069,7 +1143,6 @@ LAB_0010f150:
   } while( true );
 }
 
-
 void initialize_system(long param_1)
 
 {
@@ -1156,10 +1229,16 @@ void initialize_system(long param_1)
   // #region agent log
   debug_log("initialize_system:after_initialize_memory", "After initialize_memory", "D", (void*)param_1, param_1 + 0x35d4930, 0);
   // #endregion
-  menu_bios_warning(param_1);
-  puts("FATAL: Could not load system files.");
+  //menu_bios_warning(param_1);
+  //puts("FATAL: Could not load system files.");
+  initialize_video(param_1 + 0x36d1ec0,param_1 + 0x35d4930);
+  initialize_spu(param_1 + 0x1587000,param_1);
+  initialize_gamecard(param_1 + 800,param_1);
+  initialize_spi_peripherals(param_1 + 0x30d0,param_1);
+  initialize_rtc(param_1 + 0x5528,param_1);
+  initialize_event_list(param_1 + 0x18,param_1);
                     // WARNING: Subroutine does not return
-  quit(param_1);
+  //quit(param_1);
 }
 
 // --- 函数: menu ---
@@ -1280,17 +1359,32 @@ LAB_0017fcec:
     screen_copy16(pvVar12,0);
     screen_copy16(local_568,1);
   }
+  printf("DEBUG: menu: Loading logo...\n");
+  fflush(stdout);
   load_logo(&local_598);
+  printf("DEBUG: menu: Creating main menu...\n");
+  fflush(stdout);
   __ptr = (undefined8 *)create_menu_main(&local_598);
+  if (__ptr == (undefined8 *)0x0) {
+    printf("ERROR: create_menu_main returned NULL\n");
+    fflush(stdout);
+    return;
+  }
   uStack_580 = 0;
   local_578 = 0;
   iStack_550 = 0;
   uStack_54c = 1;
   local_535[0] = 0;
   local_588 = __ptr;
+  printf("DEBUG: menu: Pausing audio...\n");
+  fflush(stdout);
   uVar5 = audio_pause(param_1 + 0x1587000);
+  printf("DEBUG: menu: Setting screen menu on...\n");
+  fflush(stdout);
   set_screen_menu_on();
   if (param_2 != 0) {
+    printf("DEBUG: menu: Loading file...\n");
+    fflush(stdout);
     iVar7 = load_file(&local_598,(long *)&nds_ext,auStack_428);
     lVar9 = local_598;
     if ((iVar7 != -1) && (iVar7 = load_nds(local_598 + 800,auStack_428), -1 < iVar7)) {
@@ -1300,6 +1394,8 @@ LAB_0017fcec:
       uStack_54c = 0;
     }
   }
+  printf("DEBUG: menu: Entering main loop...\n");
+  fflush(stdout);
 LAB_0017fd50:
   do {
     while( true ) {
@@ -1949,12 +2045,41 @@ void set_screen_hires_mode(uint param_1,uint param_2)
     uVar2 = SDL_CreateTexture(DAT_04031578,DAT_040315a0,1,uVar6,uVar7);
     lVar5 = uVar8 * 0x28;
     (&SDL_screen)[uVar8 * 5] = uVar2;
-    if (*(void **)(&DAT_04031528 + lVar5) == (void *)0x0) {
-      pvVar3 = malloc((ulong)(uint)(iVar4 * DAT_040315a8));
+    // 安全检查：防止异常大的内存分配
+    ulong alloc_size = (ulong)(uint)(iVar4 * DAT_040315a8);
+    if (alloc_size > 0x10000000) {  // 256MB 限制
+      fprintf(stderr, "ERROR: set_screen_hires_mode: Invalid memory allocation size: %lu bytes (iVar4=%d, DAT_040315a8=%d)\n", 
+              alloc_size, iVar4, DAT_040315a8);
+      fflush(stderr);
+      // 使用安全的默认值：假设 DAT_040315a8 应该是 2 或 4
+      DAT_040315a8 = 2;  // 默认使用 2 字节每像素
+      alloc_size = (ulong)(uint)(iVar4 * DAT_040315a8);
+      fprintf(stderr, "WARNING: Using default DAT_040315a8=2, new allocation size: %lu bytes\n", alloc_size);
+      fflush(stderr);
+    }
+    void *old_ptr = *(void **)(&DAT_04031528 + lVar5);
+    // 安全检查：检查指针是否有效
+    // 如果指针是 NULL 或看起来不像有效的堆指针（小于 0x100000），使用 malloc
+    // 有效的堆指针通常在较高的地址（> 0x100000）
+    if (old_ptr == (void *)0x0 || (ulong)old_ptr < 0x100000) {
+      if (old_ptr != (void *)0x0 && (ulong)old_ptr < 0x100000) {
+        fprintf(stderr, "WARNING: set_screen_hires_mode: Invalid pointer value 0x%lx at offset %ld, using malloc instead of realloc\n", 
+                (ulong)old_ptr, lVar5);
+        fflush(stderr);
+      }
+      pvVar3 = malloc(alloc_size);
+      if (pvVar3 == (void *)0x0) {
+        fprintf(stderr, "ERROR: set_screen_hires_mode: malloc failed for %lu bytes\n", alloc_size);
+        fflush(stderr);
+      }
       *(void **)(&DAT_04031528 + lVar5) = pvVar3;
     }
     else {
-      pvVar3 = realloc(*(void **)(&DAT_04031528 + lVar5),(ulong)(uint)(iVar4 * DAT_040315a8));
+      pvVar3 = realloc(old_ptr, alloc_size);
+      if (pvVar3 == (void *)0x0) {
+        fprintf(stderr, "ERROR: set_screen_hires_mode: realloc failed for %lu bytes\n", alloc_size);
+        fflush(stderr);
+      }
       *(void **)(&DAT_04031528 + lVar5) = pvVar3;
     }
     (&DAT_04031541)[uVar8 * 0x28] = (char)param_2;
@@ -3630,10 +3755,20 @@ void get_ticks_us(long *param_1)
   timeval local_18;
   long local_8;
   
+  // 添加空指针检查
+  if (param_1 == (long *)0x0) {
+    fprintf(stderr, "ERROR: get_ticks_us called with NULL pointer\n");
+    return;
+  }
+  
   local_8 = (long)__stack_chk_guard;
-  gettimeofday(local_18,(__timezone_ptr_t)0x0);
+  if (gettimeofday(&local_18,(__timezone_ptr_t)0x0) != 0) {
+    fprintf(stderr, "ERROR: gettimeofday failed\n");
+    *param_1 = 0;
+    return;
+  }
   bVar1 = local_8 == __stack_chk_guard;
-  *param_1 = local_18.tv_usec + local_18.tv_sec * 1000000;
+  *param_1 = (long)(local_18.tv_usec + local_18.tv_sec * 1000000L);
   if (bVar1) {
     return;
   }
@@ -3674,18 +3809,46 @@ void update_screens(void)
   undefined8 local_18;
   undefined8 uStack_10;
   long local_8;
+  int render_result;
   
   uVar1 = (uint)DAT_040315cc;
   local_8 = (long)__stack_chk_guard;
+  
+  // 先清除渲染目标，确保画面正确显示
+  SDL_SetRenderDrawColor(DAT_04031578, 0, 0, 0, 255);
+  render_result = SDL_RenderClear(DAT_04031578);
+  if (render_result != 0) {
+    fprintf(stderr, "WARNING: SDL_RenderClear failed: %s\n", SDL_GetError());
+    fflush(stderr);
+  }
+  
   if (DAT_04031540 != '\0') {
-    local_18 = DAT_04031530;
-    uStack_10 = 0xc000000100;
-    SDL_RenderCopy(DAT_04031578,SDL_screen,0,(SDL_Rect *)&local_18);
+    if (SDL_screen != NULL) {
+      local_18 = DAT_04031530;
+      uStack_10 = 0xc000000100;
+      render_result = SDL_RenderCopy(DAT_04031578,SDL_screen,0,(SDL_Rect *)&local_18);
+      if (render_result != 0) {
+        fprintf(stderr, "WARNING: SDL_RenderCopy failed for SDL_screen: %s\n", SDL_GetError());
+        fflush(stderr);
+      }
+    } else {
+      fprintf(stderr, "WARNING: SDL_screen is NULL, cannot render\n");
+      fflush(stderr);
+    }
   }
   if (DAT_04031568 != '\0') {
-    local_18 = DAT_04031558;
-    uStack_10 = 0xc000000100;
-    SDL_RenderCopy(DAT_04031578,DAT_04031548,0,(SDL_Rect *)&local_18);
+    if (DAT_04031548 != NULL) {
+      local_18 = DAT_04031558;
+      uStack_10 = 0xc000000100;
+      render_result = SDL_RenderCopy(DAT_04031578,DAT_04031548,0,(SDL_Rect *)&local_18);
+      if (render_result != 0) {
+        fprintf(stderr, "WARNING: SDL_RenderCopy failed for DAT_04031548: %s\n", SDL_GetError());
+        fflush(stderr);
+      }
+    } else {
+      fprintf(stderr, "WARNING: DAT_04031548 is NULL, cannot render\n");
+      fflush(stderr);
+    }
   }
   if (DAT_040315ec != 0) {
     DAT_040315ec = DAT_040315ec + -1;
@@ -3694,10 +3857,22 @@ void update_screens(void)
                         (int)((ulong)(&DAT_04031530)[(ulong)(uVar1 ^ 1) * 5] >> 0x20),
                         (int)DAT_040315dc + (int)(&DAT_04031530)[(ulong)(uVar1 ^ 1) * 5]);
     if (*(int*)((char*)&DAT_040315e4 + 4) == 0) {
-      SDL_RenderCopy(DAT_04031578,DAT_04031588,0,(SDL_Rect *)&local_18);
+      if (DAT_04031588 != NULL) {
+        render_result = SDL_RenderCopy(DAT_04031578,DAT_04031588,0,(SDL_Rect *)&local_18);
+        if (render_result != 0) {
+          fprintf(stderr, "WARNING: SDL_RenderCopy failed for DAT_04031588: %s\n", SDL_GetError());
+          fflush(stderr);
+        }
+      }
     }
     else {
-      SDL_RenderCopy(DAT_04031578,DAT_04031590,0,(SDL_Rect *)&local_18);
+      if (DAT_04031590 != NULL) {
+        render_result = SDL_RenderCopy(DAT_04031578,DAT_04031590,0,(SDL_Rect *)&local_18);
+        if (render_result != 0) {
+          fprintf(stderr, "WARNING: SDL_RenderCopy failed for DAT_04031590: %s\n", SDL_GetError());
+          fflush(stderr);
+        }
+      }
     }
   }
   SDL_RenderPresent(DAT_04031578);
@@ -4482,6 +4657,9 @@ void execute_events(long param_1)
     
     uVar3 = *(uint *)(param_1 + 0x10);
     puVar5 = *(uint **)(param_1 + 0x318);
+    if (puVar5 == (uint *)0x0) {
+        return;
+    }
     uVar4 = *puVar5;
     *(ulong *)(param_1 + 8) = *(long *)(param_1 + 8) + (ulong)uVar3;
     
@@ -4896,7 +5074,7 @@ undefined8 initialize_audio(long param_1)
   lStack_30 = param_1;
   uVar1 = SDL_OpenAudio((SDL_AudioSpec*)&local_48,(SDL_AudioSpec*)local_28);
   *(undefined4 *)(param_1 + 0x40010) = local_28[0];
-  printf("Got output device %d, frequency %d.\n",uVar1);
+  printf("Got output device %d, frequency %d.\n",uVar1,local_28[0]);
   *(undefined1 *)(param_1 + 0x40027) = 0;
   SDL_PauseAudio(0);
   if (local_8 - __stack_chk_guard == 0) {
@@ -4971,7 +5149,7 @@ void initialize_spu(long param_1,long param_2)
   //printf((double)(uVar2 & 0xffffffff) * 0.0009765625,(double)iVar3 * 2.384185791015625e-07,1,
   //             "%lf cycles per output sample (%lf samples per cycle)\n");
   uVar4 = 0x7fff;
-  puVar5 = &noise_samples;
+  puVar5 = &noise_samples[0];
   do {
     uVar1 = uVar4 & 1;
     uVar7 = 0x80;
@@ -4983,16 +5161,7 @@ void initialize_spu(long param_1,long param_2)
     puVar6 = puVar5 + 1;
     *puVar5 = uVar7;
     puVar5 = puVar6;
-  } while (puVar6 != (undefined1 *)0x403151f);
-  return;
-}
-
-// --- 函数: initialize_rtc ---
-
-void initialize_rtc(undefined8 *param_1,undefined8 param_2)
-
-{
-  *param_1 = param_2;
+  } while (puVar6 != &noise_samples[32768]);
   return;
 }
 
@@ -5225,76 +5394,7 @@ void initialize_event_list(long param_1,long param_2)
   *(long *)(param_1 + 0x220) = param_2 + 800;
   *(undefined1 *)(param_1 + 0x238) = 0xb;
   *(undefined8 *)(param_1 + 0x300) = 0;
-  return;
-}
-
-// --- 函数: initialize_video ---
-
-void initialize_video(long *param_1,long param_2)
-
-{
-  long lVar1;
-  long lVar2;
-  long lVar3;
-  long lVar4;
-  long lVar5;
-  long lVar6;
-  long lVar7;
-  long lVar8;
-  long lVar9;
-  long lVar10;
-  
-  lVar1 = *(long *)(param_2 + 0xfba68);
-  lVar2 = *(long *)(param_2 + 0x15020);
-  lVar10 = *(long *)(param_2 + 0x15028);
-  lVar9 = *(long *)(param_2 + 0x15030);
-  lVar8 = *(long *)(param_2 + 0x15038);
-  lVar7 = *(long *)(param_2 + 0x15040);
-  lVar6 = *(long *)(param_2 + 0x15048);
-  lVar5 = *(long *)(param_2 + 0x15050);
-  lVar4 = *(long *)(param_2 + 0x15058);
-  lVar3 = *(long *)(param_2 + 0x15060);
-  *param_1 = param_2;
-  param_1[1] = lVar1 + 0x855a8;
-  param_1[0x414] = lVar2;
-  param_1[0x415] = lVar10;
-  param_1[0x416] = lVar9;
-  param_1[0x417] = lVar8;
-  param_1[0x418] = lVar7;
-  param_1[0x419] = lVar6;
-  param_1[0x41a] = lVar5;
-  param_1[0x41b] = lVar4;
-  param_1[0x41c] = lVar3;
-  param_1[0x41d] = param_2 + 0x1b2b0;
-  param_1[0x41e] = param_2 + 0x1b2b1;
-  param_1[0x41f] = param_2 + 0x1b2b2;
-  param_1[0x420] = param_2 + 0x1b2b3;
-  param_1[0x421] = param_2 + 0x1b2b4;
-  param_1[0x422] = param_2 + 0x1b2b5;
-  param_1[0x423] = param_2 + 0x1b2b6;
-  param_1[0x424] = param_2 + 0x1b2b8;
-  param_1[0x425] = param_2 + 0x1b2b9;
-  param_1[0x5ca] = param_2 + 0x16070;
-  param_1[0x5cb] = param_2 + 0x16470;
-  param_1[0x5cc] = param_2 + 0x15070;
-  param_1[0x5cd] = param_2 + 0x15470;
-  param_1[0x8b10f] = 0;
-  pthread_create((pthread_t *)(param_1 + 0x8b113),(pthread_attr_t *)0x0,video_render_thread,param_1)
-  ;
-  pthread_mutex_init((pthread_mutex_t *)(param_1 + 0x8b114),(pthread_mutexattr_t *)0x0);
-  pthread_mutex_init((pthread_mutex_t *)(param_1 + 0x8b11a),(pthread_mutexattr_t *)0x0);
-  pthread_cond_init((pthread_cond_t *)(param_1 + 0x8b120),(pthread_condattr_t *)0x0);
-  pthread_cond_init((pthread_cond_t *)(param_1 + 0x8b126),(pthread_condattr_t *)0x0);
-  *(undefined2 *)(param_1 + 0x8b12c) = 0;
-  initialize_video_2d(param_1 + 0x5cf,0,param_1);
-  initialize_video_2d(param_1 + 0x10853,1,param_1);
-  initialize_geometry(param_1 + 0x6ad9e,*(undefined8 *)(*param_1 + 0xfba68),param_1 + 0x69d98);
-  initialize_texture_cache(param_1 + 0x69d98,param_1);
-  initialize_video_3d(param_1);
-  param_1[0x8b105] = 0;
-  param_1[0x8b104] = 0;
-  param_1[0x8b107] = 0;
-  param_1[0x8b106] = 0;
+  *(undefined8 *)(param_1 + 0x318) = 0;
   return;
 }
 
@@ -5307,10 +5407,10 @@ void initialize_gamecard(long param_1,long param_2)
   long local_8;
   
   local_8 = (long)__stack_chk_guard;
-  snprintf(auStack_428,0x420,"%s%cgame_database.xml",param_2 + 0x8a780,0x2f);
-  initialize_game_database(param_1,auStack_428);
-  snprintf(auStack_428,0x420,"%s%cusrcheat.dat",param_2 + 0x8ab80,0x2f);
-  load_cheat_directory(param_1 + 0x28,auStack_428);
+  //snprintf(auStack_428,0x420,"./game_database.xml");
+  //initialize_game_database(param_1,auStack_428);
+  //snprintf(auStack_428,0x420,"%s%cusrcheat.dat",param_2 + 0x8ab80,0x2f);
+  //load_cheat_directory(param_1 + 0x28,auStack_428);
   *(undefined1 *)(param_1 + 0x8e9) = 0xff;
   *(undefined2 *)(param_1 + 0x8f8) = 0xf00f;
   *(long *)(param_1 + 0x900) = param_2 + 0x855a8;
@@ -5634,10 +5734,11 @@ LAB_0011c1bc:
   // #region agent log
   debug_log("initialize_memory:before_pointer_assign", "Before pointer assignment", "D", (void*)nds_system, param_2 + 0x10cdfa0, 0);
   // #endregion
-  *(long **)(nds_system + param_2 + 0x10cdfa0) = param_1 + 0x1faa3;
-  *(undefined8 *)(nds_system + param_2 + 0x20d4590) = 0;
-  *(long **)(nds_system + param_2 + 0x10cddd0) = param_1 + 0x360e;
-  *(long **)(nds_system + param_2 + 0x20d43c0) = param_1 + 0x460e;
+  // param_2 是 nds_system 的地址，不需要再加 nds_system
+  *(long **)(param_2 + 0x10cdfa0) = param_1 + 0x1faa3;
+  *(undefined8 *)(param_2 + 0x20d4590) = 0;
+  *(long **)(param_2 + 0x10cddd0) = param_1 + 0x360e;
+  *(long **)(param_2 + 0x20d43c0) = param_1 + 0x460e;
   puts("  Initializing DMA.");
   initialize_dma(param_1 + 0x1fa53,param_1,param_1 + 0x1f753,param_1 + 0x360e,lVar1);
   initialize_dma(param_1 + 0x1fa69,param_1,param_1 + 0x1f8d3,param_1 + 0x460e,lVar2);
@@ -6236,7 +6337,8 @@ uint get_gui_input(long param_1,uint *param_2)
   ulong uVar9;
   long lVar10;
   long local_48;
-  uint local_40 [2];
+  // SDL_Event 通常需要 56 字节或更多，使用足够大的缓冲区
+  char local_40 [128];
   uint local_38;
   byte local_34;
   byte local_33;
@@ -7576,8 +7678,47 @@ void audio_revert_pause_state(undefined8 param_1,int param_2)
 void update_screen_menu(void)
 
 {
-  SDL_UpdateTexture(DAT_04031580,0,DAT_04031598,0x640);
-  SDL_RenderCopy(DAT_04031578,DAT_04031580,0,0);
+  int render_result;
+  
+  if (DAT_04031578 == NULL) {
+    fprintf(stderr, "ERROR: update_screen_menu: renderer is NULL\n");
+    fflush(stderr);
+    return;
+  }
+  if (DAT_04031580 == NULL) {
+    fprintf(stderr, "ERROR: update_screen_menu: texture is NULL\n");
+    fflush(stderr);
+    return;
+  }
+  if (DAT_04031598 == NULL) {
+    fprintf(stderr, "ERROR: update_screen_menu: pixel buffer is NULL\n");
+    fflush(stderr);
+    return;
+  }
+  
+  // 先清除渲染目标
+  SDL_SetRenderDrawColor(DAT_04031578, 0, 0, 0, 255);
+  render_result = SDL_RenderClear(DAT_04031578);
+  if (render_result != 0) {
+    fprintf(stderr, "WARNING: update_screen_menu: SDL_RenderClear failed: %s\n", SDL_GetError());
+    fflush(stderr);
+  }
+  
+  // 更新纹理
+  render_result = SDL_UpdateTexture(DAT_04031580,0,DAT_04031598,0x640);
+  if (render_result != 0) {
+    fprintf(stderr, "WARNING: update_screen_menu: SDL_UpdateTexture failed: %s\n", SDL_GetError());
+    fflush(stderr);
+  }
+  
+  // 渲染纹理
+  render_result = SDL_RenderCopy(DAT_04031578,DAT_04031580,0,0);
+  if (render_result != 0) {
+    fprintf(stderr, "WARNING: update_screen_menu: SDL_RenderCopy failed: %s\n", SDL_GetError());
+    fflush(stderr);
+  }
+  
+  // 显示画面
   SDL_RenderPresent(DAT_04031578);
   return;
 }
@@ -7707,9 +7848,16 @@ int load_file(long *param_1,long *param_2,char *param_3)
   platform_print_code(auStack_7a8,*(undefined2 *)(lVar21 + 0x862bc));
   platform_print_code(auStack_788,*(undefined2 *)(lVar21 + 0x862be));
   platform_print_code(auStack_768,*(undefined2 *)(lVar21 + 0x862c4));
+  fprintf(stderr, "DEBUG: load_file: clearing screen menu...\n");
+  fflush(stderr);
   clear_screen_menu(0);
+  fprintf(stderr, "DEBUG: load_file: screen cleared, entering main loop...\n");
+  fflush(stderr);
   set_font_narrow();
+  // 从系统配置中获取初始路径（但可能未初始化）
   strcpy(param_3,(char *)(*param_1 + 0x8af80));
+  fprintf(stderr, "DEBUG: load_file: initial path from config (may be uninitialized): %s\n", param_3);
+  fflush(stderr);
   uVar6 = 0;
   local_d210 = 0;
   local_d148 = 0;
@@ -7726,10 +7874,43 @@ LAB_0017b584:
   clear_gui_actions();
   local_d258 = malloc(0x300);
   pvVar8 = malloc(0x100);
+  // 直接使用getcwd获取当前工作目录，不依赖可能未初始化的配置路径
+  // 先初始化缓冲区
+  memset(acStack_428, 0, 0x400);
+  fprintf(stderr, "DEBUG: load_file: calling getcwd...\n");
+  fflush(stderr);
   pcVar9 = getcwd(acStack_428,0x400);
   if (pcVar9 == (char *)0x0) {
-    puts("ERROR: Couldn\'t get current path.");
+    fprintf(stderr, "ERROR: Couldn't get current path, using default '.'\n");
+    fflush(stderr);
+    // 如果getcwd失败，使用当前目录的默认值
+    memset(acStack_428, 0, 0x400);
+    strncpy(acStack_428, ".", 0x400 - 1);
+    acStack_428[0x400 - 1] = '\0';
+    pcVar9 = acStack_428;
   }
+  fprintf(stderr, "DEBUG: load_file: getcwd returned: %p, path: '%s' (length: %zu)\n", 
+          pcVar9, acStack_428, strlen(acStack_428));
+  fflush(stderr);
+  // 验证路径是否有效
+  if (acStack_428[0] == '\0' || strlen(acStack_428) == 0) {
+    fprintf(stderr, "WARNING: load_file: path is empty after getcwd, using '.'\n");
+    fflush(stderr);
+    memset(acStack_428, 0, 0x400);
+    strncpy(acStack_428, ".", 0x400 - 1);
+    acStack_428[0x400 - 1] = '\0';
+  }
+  // 保存路径到堆上，防止被后续函数覆盖栈缓冲区
+  char* saved_path = (char*)malloc(0x400);
+  if (saved_path == NULL) {
+    fprintf(stderr, "ERROR: load_file: failed to allocate memory for saved_path\n");
+    fflush(stderr);
+    return -1;
+  }
+  strncpy(saved_path, acStack_428, 0x400 - 1);
+  saved_path[0x400 - 1] = '\0';
+  fprintf(stderr, "DEBUG: load_file: saved path to heap: '%s'\n", saved_path);
+  fflush(stderr);
   iVar5 = __xstat(0,"drastic_file_info.txt",(struct stat *)(auStack_d0d0 + 0x80));
   if (iVar5 == 0) {
     puts("Renaming drastic_file_info.txt to .drastic_file_info.txt.");
@@ -7744,9 +7925,33 @@ LAB_0017b584:
   icon_cache_load((long int*)&local_d108);
   __stream = fopen(".drastic_file_info.txt","ab");
   __stream_00 = fopen(".drastic_icon_cache.bin","ab");
+  // 从堆上恢复路径，防止被栈溢出覆盖
+  strncpy(acStack_428, saved_path, 0x400 - 1);
+  acStack_428[0x400 - 1] = '\0';
+  free(saved_path);
+  // 在opendir之前再次验证路径，如果路径无效则强制使用当前目录
+  size_t path_len = strlen(acStack_428);
+  fprintf(stderr, "DEBUG: load_file: before opendir, acStack_428 content: '%s' (length: %zu, first char: 0x%02x)\n", 
+          acStack_428, path_len, path_len > 0 ? (unsigned char)acStack_428[0] : 0);
+  fflush(stderr);
+  // 如果路径无效（空、包含非打印字符、或第一个字符不是有效路径字符），强制使用当前目录
+  if (path_len == 0 || acStack_428[0] == '\0' || 
+      (acStack_428[0] < 32 && acStack_428[0] != '.') || 
+      (acStack_428[0] > 126)) {
+    fprintf(stderr, "WARNING: load_file: path appears invalid (len=%zu, first=0x%02x), forcing to '.'\n", 
+            path_len, path_len > 0 ? (unsigned char)acStack_428[0] : 0);
+    fflush(stderr);
+    memset(acStack_428, 0, 0x400);
+    strncpy(acStack_428, ".", 0x400 - 1);
+    acStack_428[0x400 - 1] = '\0';
+  }
+  fprintf(stderr, "DEBUG: load_file: opening directory: '%s' (final path)\n", acStack_428);
+  fflush(stderr);
   __dirp = opendir(acStack_428);
   uVar20 = local_d110;
   if (__dirp == (DIR *)0x0) {
+    fprintf(stderr, "ERROR: load_file: failed to open directory: %s\n", acStack_428);
+    fflush(stderr);
     __size_01 = 0;
     bVar4 = true;
     uVar29 = 0;
@@ -7757,6 +7962,8 @@ LAB_0017b584:
     local_d220 = 0;  // ._0_4_ removed
   }
   else {
+    fprintf(stderr, "DEBUG: load_file: directory opened successfully, reading files...\n");
+    fflush(stderr);
     uVar29 = 0x20;
     uVar23 = 0;
     local_d25c = 0;
@@ -7769,10 +7976,33 @@ LAB_0017b718:
       do {
         pcVar9 = pdVar10->d_name;
         sVar11 = strlen(pcVar9);
-        iVar5 = __xstat(0,pcVar9,(struct stat *)auStack_d0d0);
+        // 使用完整路径进行 stat，而不是相对路径
+        {
+          char full_path[0x800];
+          snprintf(full_path, sizeof(full_path), "%s/%s", acStack_428, pcVar9);
+          iVar5 = __xstat(0, full_path, (struct stat *)auStack_d0d0);
+          if (iVar5 < 0) {
+            fprintf(stderr, "DEBUG: load_file: __xstat failed for %s: %m\n", full_path);
+            fflush(stderr);
+            // 如果stat失败，跳过这个条目
+            pdVar10 = readdir(__dirp);
+            if (pdVar10 == (dirent *)0x0) break;
+            continue;
+          }
+        }
+        // 检查是否是目录：st_mode的高4位是文件类型，0x4000表示目录
+        // 在64位系统上，struct stat的布局是：st_dev(8) + st_ino(8) + st_nlink(4) + st_mode(4)
+        // 所以st_mode的偏移量是20字节（0x14），而不是16字节
+        // 但为了兼容性，我们使用offsetof来获取正确的偏移量
+        struct stat* st = (struct stat*)auStack_d0d0;
+        uint st_mode = st->st_mode;
+        int is_dir = S_ISDIR(st_mode);
+        fprintf(stderr, "DEBUG: load_file: found entry: %s (stat_ok=%d, st_mode=0x%x, is_dir=%d, file_count=%u, dir_count=%u)\n", 
+                pcVar9, iVar5 >= 0, st_mode, is_dir, uVar23, local_d25c);
+        fflush(stderr);
         if ((-1 < iVar5) && ((pdVar10->d_name[0] != '.' || (pdVar10->d_name[1] == '.')))) {
           uVar25 = (uint)sVar11;
-          if ((*(uint*)(auStack_d0d0 + 16) & 0xf000) == 0x4000) {
+          if (S_ISDIR(st_mode)) {
             pcVar13 = malloc((ulong)(uVar25 + 1));
             *(char **)((long)pvVar8 + __size_01) = pcVar13;
             local_d25c = local_d25c + 1;
@@ -7780,18 +8010,44 @@ LAB_0017b718:
             strcpy(pcVar13,pcVar9);
           }
           else if (3 < uVar25) {
-            pcVar13 = pcVar9 + (uVar25 - 4);
-            if ((pcVar9[uVar25 - 4] != '.') &&
-               (pcVar13 = pcVar9 + (uVar25 - 3), pcVar9[uVar25 - 3] != '.')) {
-              pcVar13 = pcVar9;
+            // 提取文件扩展名：从文件名末尾查找最后一个 '.'
+            {
+              char* dot_pos = strrchr(pcVar9, '.');
+              if (dot_pos != NULL && dot_pos != pcVar9) {
+                // 找到了扩展名，使用点后的部分
+                pcVar13 = dot_pos + 1;  // 跳过 '.'
+              } else {
+                // 没有找到扩展名，使用整个文件名
+                pcVar13 = pcVar9;
+              }
             }
-            pcVar17 = (char *)*param_2;
+            // param_2 是 &nds_ext，nds_ext 是 (long*)nds_ext_array
+            // 所以 *param_2 是 nds_ext 的值，也就是 nds_ext_array 的地址
+            // 但是我们需要的是 nds_ext_array[0]，也就是指向 ".nds" 的指针
+            // 所以我们需要先得到 nds_ext_array 的地址，然后读取第一个元素
+            pcVar17 = (char *)*((long*)*param_2);  // 这是 nds_ext_array[0]，指向 ".nds"
+            fprintf(stderr, "DEBUG: load_file: checking file extension for %s, ext=%s, param_2=%p, *param_2=0x%lx\n", 
+                    pcVar9, pcVar13, param_2, *param_2);
+            fflush(stderr);
             if (pcVar17 != (char *)0x0) {
+              // 检查指针是否有效
+              fprintf(stderr, "DEBUG: load_file: param_2[0]=%s (address=0x%p, first byte=0x%02x)\n", 
+                      pcVar17, (void*)pcVar17, (unsigned char)pcVar17[0]);
+              fflush(stderr);
               uVar31 = 0;
 LAB_0017c4f8:
               iVar5 = strcasecmp(pcVar13,pcVar17);
+              fprintf(stderr, "DEBUG: load_file: strcasecmp('%s', '%s') = %d\n", pcVar13, pcVar17, iVar5);
+              fflush(stderr);
               pvVar18 = local_d118;
-              if (iVar5 != 0) goto LAB_0017c4e8;
+              if (iVar5 != 0) {
+                // 扩展名不匹配，检查下一个扩展名
+                fprintf(stderr, "DEBUG: load_file: extension '%s' does not match '%s', checking next...\n", pcVar13, pcVar17);
+                fflush(stderr);
+                goto LAB_0017c4e8;
+              }
+              fprintf(stderr, "DEBUG: load_file: extension '%s' matches '%s', adding file to list\n", pcVar13, pcVar17);
+              fflush(stderr);
               __size = (ulong)(uVar25 + 1);
               puVar12 = (undefined8 *)((long)local_d258 + (ulong)uVar23 * 0x18);
               if (*(int *)(param_1[1] + 0x43c) == 0) goto LAB_0017c520;
@@ -7896,6 +8152,8 @@ joined_r0x0017c544:
   }
   puVar12 = realloc(local_d258,__size_00);
   pvVar8 = realloc(pvVar8,__size_01);
+  fprintf(stderr, "DEBUG: load_file: after reading directory, file count: %u, dir count: %u\n", uVar23, local_d25c);
+  fflush(stderr);
   qsort(puVar12,sVar11,0x18,compare_file_names);
   qsort(pvVar8,uVar29,8,compare_directory_names);
   closedir(__dirp);
@@ -7951,6 +8209,21 @@ LAB_0017b9b8:
   uVar31 = 0;
   *param_3 = '\0';
 LAB_0017b9d4:
+  fprintf(stderr, "DEBUG: load_file: LAB_0017b9d4: drawing file list, file count: %u, dir count: %u\n", uVar23, local_d25c);
+  fflush(stderr);
+  // 检查屏幕指针是否有效（使用临时变量，避免作用域问题）
+  {
+    void* screen_ptr = (void*)get_screen_ptr(0);
+    fprintf(stderr, "DEBUG: load_file: screen_ptr = %p\n", screen_ptr);
+    fflush(stderr);
+    if (screen_ptr == NULL) {
+      fprintf(stderr, "ERROR: load_file: get_screen_ptr(0) returned NULL, cannot draw text\n");
+      fflush(stderr);
+    }
+  }
+  // 注意：draw_menu_bg 期望的是一个菜单结构体指针，而不是 load_file 的 param_1
+  // 在 load_file 中，我们不需要调用 draw_menu_bg，因为背景已经在 menu 函数中绘制了
+  // draw_menu_bg(param_1);  // 注释掉，因为参数类型不匹配
   print_string(acStack_700,0xffff,0,6,0);
   print_string(auStack_6a8,0xffff,0,6,0);
   print_string(auStack_628,0xffff,0,0x16e,0);
@@ -8094,9 +8367,13 @@ LAB_0017bc5c:
     iVar5 = iVar5 + 0xf;
     uVar28 = uVar28 + 1;
   } while (iVar5 != 0x113);
+  fprintf(stderr, "DEBUG: load_file: about to update screen menu, file count: %u\n", local_d25c);
+  fflush(stderr);
   update_screen_menu();
   update_screen_menu();
   update_screen_menu();
+  fprintf(stderr, "DEBUG: load_file: screen updated, waiting for input...\n");
+  fflush(stderr);
   delay_us(5000);
   lVar21 = *param_1;
   do {
@@ -8351,7 +8628,13 @@ LAB_0017bdcc:
   goto LAB_0017b9d4;
 LAB_0017c4e8:
   uVar31 = uVar31 + 1;
-  pcVar17 = (char *)param_2[uVar31];
+  // param_2 是 &nds_ext，nds_ext 是 (long*)nds_ext_array
+  // 所以 *param_2 是 nds_ext_array 的地址
+  // 我们需要访问 nds_ext_array[uVar31]
+  {
+    long* nds_ext_array_ptr = (long*)*param_2;  // 这是 nds_ext_array 的地址
+    pcVar17 = (char *)nds_ext_array_ptr[uVar31];  // 这是 nds_ext_array[uVar31]
+  }
   if (pcVar17 == (char *)0x0) goto joined_r0x0017c544;
   goto LAB_0017c4f8;
 code_r0x0017c164:
@@ -8469,21 +8752,54 @@ void select_load_game(long *param_1)
 void set_screen_menu_on(void)
 
 {
+  if (DAT_04031570 == NULL || DAT_04031578 == NULL) {
+    fprintf(stderr, "ERROR: set_screen_menu_on called but window or renderer is NULL\n");
+    fflush(stderr);
+    return;
+  }
   SDL_SetWindowSize(DAT_04031570,800,0x1e0);
   SDL_RenderSetLogicalSize(DAT_04031578,800,0x1e0);
   if (DAT_04031580 == 0) {
     DAT_04031580 = SDL_CreateTexture(DAT_04031578,0x15151002,1,800,0x1e0);
+    if (DAT_04031580 == NULL) {
+      fprintf(stderr, "ERROR: SDL_CreateTexture failed in set_screen_menu_on: %s\n", SDL_GetError());
+      fflush(stderr);
+      return;
+    } else {
+      fprintf(stderr, "DEBUG: SDL_CreateTexture succeeded in set_screen_menu_on\n");
+      fflush(stderr);
+    }
     clear_screen();
   }
   else {
     clear_screen();
   }
   if (DAT_04031598 != (void *)0x0) {
+    fprintf(stderr, "DEBUG: set_screen_menu_on: DAT_04031598 already allocated at %p\n", DAT_04031598);
+    fflush(stderr);
     DAT_040315d4 = 1;  // ._4_4_ removed
     return;
   }
   DAT_04031598 = malloc(0xbb800);
+  if (DAT_04031598 == NULL) {
+    fprintf(stderr, "ERROR: malloc failed for DAT_04031598 in set_screen_menu_on\n");
+    fflush(stderr);
+    return;
+  }
+  fprintf(stderr, "DEBUG: set_screen_menu_on: allocated DAT_04031598 at %p, size 0xbb800\n", DAT_04031598);
+  fflush(stderr);
   DAT_040315d4 = 1;  // ._4_4_ removed
+  // 确保DAT_040315a8设置正确（用于get_screen_pitch）
+  if (DAT_040315a8 == 0) {
+    DAT_040315a8 = 2;  // 默认值，对应800像素宽度
+    fprintf(stderr, "DEBUG: set_screen_menu_on: setting DAT_040315a8 to 2\n");
+    fflush(stderr);
+  }
+  // 使用clear_screen_menu清除整个屏幕（填充为0，即黑色）
+  // 这样可以确保整个缓冲区都被正确初始化
+  clear_screen_menu(0);
+  fprintf(stderr, "DEBUG: set_screen_menu_on: cleared screen menu\n");
+  fflush(stderr);
   return;
 }
 
