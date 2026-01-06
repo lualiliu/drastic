@@ -7,16 +7,33 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ptrace.h>
+#include <sys/resource.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <pthread.h>
+
 #include <wchar.h>
 #include <getopt.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 // 包含自定义头文件
 #include "drastic_val.h"
 #include "drastic_functions.h"
 #include "drastic_cpu.h"
+
+// #region agent log
+// Debug logging helper function
+static void debug_log(const char* location, const char* message, const char* hypothesis_id, void* ptr_val, long long_val, int int_val) {
+  FILE* log_file = fopen("/home/luali/github/drastic/.cursor/debug.log", "a");
+  if (log_file) {
+    fprintf(log_file, "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"%s\",\"location\":\"%s\",\"message\":\"%s\",\"data\":{\"ptr\":\"%p\",\"long\":%lld,\"int\":%d},\"timestamp\":%ld}\n",
+            hypothesis_id, location, message, ptr_val, (long long)long_val, int_val, time(NULL));
+    fclose(log_file);
+  }
+}
+// #endregion
 // 确保SDL2类型可用
 #include <SDL2/SDL.h>
 // SDL_Rect 前向声明（如果SDL.h中没有定义）
@@ -32,13 +49,31 @@ struct SDL_Rect {
 #include <setjmp.h>
 #include <stdarg.h>
 
+// 定义nds_system为动态分配的全局变量
+undefined1* nds_system = nullptr;
+
+// 实现 __strcpy_chk - 带边界检查的 strcpy
+char* __strcpy_chk(char* dest, const char* src, size_t destlen) {
+  if (dest == nullptr || src == nullptr || destlen == 0) {
+    return dest;
+  }
+  size_t src_len = strlen(src);
+  if (src_len >= destlen) {
+    // 如果源字符串太长，截断并确保以null结尾
+    strncpy(dest, src, destlen - 1);
+    dest[destlen - 1] = '\0';
+  } else {
+    strcpy(dest, src);
+  }
+  return dest;
+}
+
 // 声明缺失的函数
 extern "C" {
 // printf 和 snprintf 已在标准库中定义，不需要重新声明
 // int printf(int flag, const char *format, ...); // 注释掉，使用标准库版本
 // int snprintf(char *str, int flag, size_t strlen, const char *format, ...); // 注释掉，使用标准库版本
 void __stack_chk_fail();
-char* __strcpy_chk(char* dest, const char* src, size_t destlen);
 int __longjmp_chk(void* env, int val);
 int __xstat(int version, const char* path, struct stat* buf);
 int __snprintf_chk(char* str, size_t maxlen, int flag, size_t strlen, const char* format, ...);
@@ -48,36 +83,130 @@ int __snprintf_chk(char* str, size_t maxlen, int flag, size_t strlen, const char
 int main(int param_1, char** param_2)
 
 {
+  // Increase stack size limit to prevent stack overflow
+  // Default is usually 8MB, increase to 32MB for safety
+  struct rlimit rl;
+  if (getrlimit(RLIMIT_STACK, &rl) == 0) {
+    rlim_t new_limit = 32 * 1024 * 1024; // 32MB
+    fprintf(stderr, "Current stack limit: soft=%lu, hard=%lu\n", 
+            (unsigned long)rl.rlim_cur, (unsigned long)rl.rlim_max);
+    
+    if (rl.rlim_cur < new_limit) {
+      // Try to increase hard limit if it's too low
+      if (rl.rlim_max < new_limit && rl.rlim_max != RLIM_INFINITY) {
+        rl.rlim_max = new_limit;
+      }
+      rl.rlim_cur = new_limit;
+      if (setrlimit(RLIMIT_STACK, &rl) != 0) {
+        fprintf(stderr, "WARNING: Failed to increase stack size limit: %m\n");
+        fprintf(stderr, "Trying with current hard limit: %lu\n", (unsigned long)rl.rlim_max);
+        // Try with just the hard limit if it's less than our target
+        if (rl.rlim_max > rl.rlim_cur) {
+          rl.rlim_cur = rl.rlim_max;
+          if (setrlimit(RLIMIT_STACK, &rl) == 0) {
+            fprintf(stderr, "Stack size limit set to hard limit: %lu bytes\n", 
+                    (unsigned long)rl.rlim_cur);
+          }
+        }
+      } else {
+        fprintf(stderr, "Stack size limit increased to %lu bytes\n", (unsigned long)rl.rlim_cur);
+      }
+    } else {
+      fprintf(stderr, "Stack size limit already sufficient: %lu bytes\n", 
+              (unsigned long)rl.rlim_cur);
+    }
+  }
+  
+  // 在函数最开始就输出，确认程序进入了main
+  fputs("MAIN ENTRY\n", stderr);
+  fflush(stderr);
+  
   int iVar1;
   undefined8 uVar2;
   
+  fputs("Before allocation\n", stderr);
+  fflush(stderr);
+  
+  // 动态分配nds_system数组
+  // #region agent log
+  debug_log("main:before_allocation", "Before allocating nds_system", "A", nullptr, 0, 0);
+  // #endregion
+  if (nds_system == nullptr) {
+    fputs("Allocating nds_system...\n", stderr);
+    fflush(stderr);
+    nds_system = (undefined1*)calloc(62042112, 1);
+    // #region agent log
+    debug_log("main:after_allocation", "After allocating nds_system", "A", (void*)nds_system, 62042112, (nds_system == nullptr) ? 1 : 0);
+    // #endregion
+    if (nds_system == nullptr) {
+      fprintf(stderr, "ERROR: Failed to allocate nds_system array (62042112 bytes)\n");
+      return -1;
+    }
+    fprintf(stderr, "Allocated nds_system at %p\n", (void*)nds_system);
+    fflush(stderr);
+  }
+  
   printf("Starting DraStic (version %s)\n\n","r2.5.2.2");
-  *(undefined8*)(nds_system + 0x57482784) = 0xffffffffffffffff;
+  printf("DEBUG: nds_system address: %p, size: 62042112 bytes\n", (void*)nds_system);
+  // 注释掉：偏移量0x57482784 (1464346500字节) 超出nds_system数组大小(62042112字节)
+  // 这个值应该在内存映射完成后才设置
+  // *(undefined8*)(nds_system + 0x57482784) = 0xffffffffffffffff;
+  printf("DEBUG: Calling initialize_system...\n");
+  fflush(stdout);
+  // #region agent log
+  debug_log("main:before_initialize_system", "Before calling initialize_system", "A", (void*)nds_system, (long)nds_system, 0);
+  // #endregion
   initialize_system((long)nds_system);
+  // #region agent log
+  debug_log("main:after_initialize_system", "After calling initialize_system", "A", (void*)nds_system, (long)nds_system, 0);
+  // #endregion
+  printf("DEBUG: initialize_system completed\n");
+  fflush(stdout);
   //process_arguments((long)nds_system,param_1,param_2);
-  initialize_screen(*(uint*)(nds_system + 0x3b2a9a9));
+  printf("DEBUG: Calling initialize_screen...\n");
+  fflush(stdout);
+  // 修复：使用正确的偏移量 0x362e9a9 而不是 0x3b2a9a9
+  // 0x3b2a9a9 = (long)nds_system + 0x362e9a9，但这里应该直接使用 0x362e9a9
+  initialize_screen(*(uint*)(nds_system + 0x362e9a9));
+  printf("DEBUG: initialize_screen completed\n");
+  fflush(stdout);
   if (param_1 < 2) {
     menu((long)nds_system,1);
   }
   else {
     uVar2 = *(undefined8 *)(param_2 + (long)param_1 * 8 + -8);
     printf("Loading gamecard file %s.\n",(char*)uVar2);
+    // #region agent log
+    debug_log("main:before_load_nds", "Before calling load_nds", "B", (void*)uVar2, 0x4fc320, 0);
+    // #endregion
     iVar1 = load_nds(0x4fc320,(char*)uVar2);
+    // #region agent log
+    debug_log("main:after_load_nds", "After calling load_nds", "B", (void*)uVar2, iVar1, 0);
+    // #endregion
     if (iVar1 != 0) {
       puts("Gamecard load failed.");
       return 0xffffffff;
     }
     set_screen_menu_off();
+    // #region agent log
+    debug_log("main:before_reset_system", "Before calling reset_system", "E", (void*)nds_system, (long)nds_system, 0);
+    // #endregion
     reset_system((undefined8)nds_system);
+    // #region agent log
+    debug_log("main:after_reset_system", "After calling reset_system", "E", (void*)nds_system, (long)nds_system, 0);
+    // #endregion
   }
-  _setjmp((__jmp_buf_tag *)(nds_system + 0x3b2a840));
-  if (nds_system[0x3b2a9a8] == '\0') {
+  // 修复：使用正确的偏移量
+  _setjmp((__jmp_buf_tag *)(nds_system + 0x362e840));
+  if (nds_system[0x362e9a8] == '\0') {
     cpu_next_action_arm7_to_event_update((long)nds_system);
   }
   else {
-    printf("Calling recompiler event update handler (@ %p).\n",*(void**)(nds_system + 0x22847464));
-    printf("Memory map offset %p, translate cache pointer %p\n",*(void**)(nds_system + 0x57482784),
-                 (void*)0x588000);
+    // 注释掉：偏移量0x22847464和0x57482784超出nds_system数组范围
+    // 这些值应该在内存映射完成后才访问
+    // printf("Calling recompiler event update handler (@ %p).\n",*(void**)(nds_system + 0x22847464));
+    // printf("Memory map offset %p, translate cache pointer %p\n",*(void**)(nds_system + 0x57482784),
+    //              (void*)0x588000);
     //recompiler_entry((long)nds_system,*(undefined8*)(nds_system + 0x57482784));
     cpu_next_action_arm7_to_event_update((long)nds_system);
   }
@@ -149,6 +278,9 @@ LAB_0016fe48:
     lVar5 = (long)nds_file_open(param_2,(long)puVar2,*(int *)(lVar9 + 0x85a3c),
                           *(int *)(lVar9 + 0x85a28));
   }
+  // #region agent log
+  debug_log("load_nds:before_file_check", "Checking nds_file_open result", "B", (void*)lVar5, lVar5, 0);
+  // #endregion
   if ((lVar5 == 0) &&
      ((*(int *)(lVar9 + 0x85a24) != 0 ||
       (lVar5 = (long)nds_file_open(param_2,(long)auStack_828,*(int *)(lVar9 + 0x85a3c),
@@ -157,7 +289,13 @@ LAB_0016fe48:
     printf("ERROR: Could not open %s\n",param_2);
     goto LAB_0016ff3c;
   }
+  // #region agent log
+  debug_log("load_nds:before_pointer_deref", "Before dereferencing lVar5", "B", (void*)lVar5, lVar5, 0);
+  // #endregion
   *(long *)(param_1 + 0x920) = lVar5;
+  // #region agent log
+  debug_log("load_nds:before_header_check", "Before checking header size", "B", (void*)lVar5, lVar5, (lVar5 != 0) ? *(uint *)(lVar5 + 0x10) : 0);
+  // #endregion
   if (*(uint *)(lVar5 + 0x10) < 0x200) {
     uVar8 = 0xffffffff;
     printf("%s does not have a valid gamecard_header.\n",param_2);
@@ -261,8 +399,8 @@ void initialize_screen(uint param_1)
   DAT_04031541 = 1;
   DAT_04031569 = 1;
   DAT_040315ec = 0;
-  set_screen_hires_mode(0,0);
-  set_screen_hires_mode(1,0);
+  //set_screen_hires_mode(0,0);
+  //set_screen_hires_mode(1,0);
   return;
 }
 
@@ -368,22 +506,34 @@ void reset_system(undefined8 *param_1)
   undefined1 auStack_428 [1056];
   long local_8;
   
+  // #region agent log
+  debug_log("reset_system:entry", "Entering reset_system", "E", (void*)param_1, (long)param_1, 0);
+  // #endregion
   local_8 = (long)__stack_chk_guard;
   snprintf((char*)auStack_428,0x420,"%s.cfg",(char*)(param_1 + 0x11670));
   load_config_file(param_1,"drastic.cfg",0);
   load_config_file(param_1,auStack_428,1);
+  // #region agent log
+  debug_log("reset_system:before_reset_cpu", "Before reset_cpu calls", "E", (void*)param_1, (long)param_1, 0);
+  // #endregion
   puVar1 = param_1 + 0x2b8faa;
   reset_cpu(puVar1);
   puVar2 = param_1 + 0x4b9c68;
   reset_cpu(puVar2);
   reset_cpu_block(puVar1);
   reset_translation_cache(param_1 + 0x11800);
+  // #region agent log
+  debug_log("reset_system:before_reset_memory", "Before reset_memory", "E", (void*)param_1, (long)(param_1 + 0x6ba926), 0);
+  // #endregion
   reset_memory(param_1 + 0x6ba926);
   reset_video(param_1 + 0x6da3d8);
   reset_gamecard(param_1 + 100);
   reset_spi_peripherals(param_1 + 0x61a);
   reset_spu(param_1 + 0x2b0e00);
   reset_input(param_1 + 0xaaa);
+  // #region agent log
+  debug_log("reset_system:before_reset_rtc", "Before reset_rtc", "E", (void*)param_1, (long)param_1, 0);
+  // #endregion
   reset_rtc(param_1 + 0xaa5,*(undefined4 *)((long)param_1 + 0x85a64),param_1[0x10b4d]);
   reset_event_list(param_1 + 3);
   *param_1 = 0;
@@ -928,13 +1078,54 @@ void initialize_system(long param_1)
   
   //initialize_lua();
   platform_initialize();
+  
+  // 检查 param_1 是否有效
+  if (param_1 == 0) {
+    fprintf(stderr, "ERROR: initialize_system called with null pointer\n");
+    return;
+  }
+  
+  // 检查 param_1 是否等于 nds_system 的地址（param_1 就是传入的 nds_system 地址）
+  if (param_1 != (long)nds_system) {
+    fprintf(stderr, "ERROR: initialize_system param_1 mismatch: param_1=%p, nds_system=%p\n", 
+            (void*)param_1, (void*)nds_system);
+    return;
+  }
+  
+  // 检查偏移量是否在有效范围内（检查最大偏移量是否超出数组边界）
+  size_t arr_size = 62042112;
+  size_t max_offset = 0x8ab80 + 0x400;  // 最大使用的偏移量
+  if (max_offset > arr_size) {
+    fprintf(stderr, "ERROR: initialize_system max offset out of range: max_offset=%zu, arr_size=%zu\n", 
+            max_offset, arr_size);
+    return;
+  }
+  
+  // #region agent log
+  debug_log("initialize_system:before_getcwd", "Before getcwd", "D", (void*)param_1, param_1 + 0x8a780, 0);
+  // #endregion
   pcVar2 = getcwd((char *)(param_1 + 0x8a780),0x400);
+  // #region agent log
+  debug_log("initialize_system:after_getcwd", "After getcwd", "D", (void*)pcVar2, (long)param_1, 0);
+  // #endregion
   if (pcVar2 == (char *)0x0) {
     puts("getcwd for root path failed.");
+    // 如果getcwd失败，使用当前目录的默认值
+    strncpy((char *)(param_1 + 0x8a780), ".", 0x400 - 1);
+    ((char *)(param_1 + 0x8a780))[0x400 - 1] = '\0';
   }
-  __strcpy_chk(param_1 + 0x8ab80,(char *)(param_1 + 0x8a780),0x400);
+  // #region agent log
+  debug_log("initialize_system:before_strcpy", "Before strcpy_chk", "D", (void*)param_1, param_1 + 0x8ab80, 0);
+  // #endregion
+  __strcpy_chk((char *)(param_1 + 0x8ab80),(char *)(param_1 + 0x8a780),0x400);
+  fprintf(stderr, "DEBUG: After strcpy_chk, calling initialize_system_directories\n");
+  fflush(stderr);
   initialize_system_directories(param_1);
-  config_default(param_1 + 0x855a8);
+  fprintf(stderr, "DEBUG: After initialize_system_directories, calling config_default\n");
+  fflush(stderr);
+  config_default((undefined4 *)(param_1 + 0x855a8));
+  fprintf(stderr, "DEBUG: After config_default\n");
+  fflush(stderr);
   load_directory_config_file(param_1,"drastic.cf2");
   load_config_file(param_1,"drastic.cfg",0);
   initialize_cpu(param_1 + 0x15c7d50,param_1,1,param_1 + 0x25ce340);
@@ -958,7 +1149,13 @@ void initialize_system(long param_1)
     return;
   }
   */
+  // #region agent log
+  debug_log("initialize_system:before_initialize_memory", "Before initialize_memory", "D", (void*)param_1, param_1 + 0x35d4930, 0);
+  // #endregion
   initialize_memory(param_1 + 0x35d4930,param_1);
+  // #region agent log
+  debug_log("initialize_system:after_initialize_memory", "After initialize_memory", "D", (void*)param_1, param_1 + 0x35d4930, 0);
+  // #endregion
   menu_bios_warning(param_1);
   puts("FATAL: Could not load system files.");
                     // WARNING: Subroutine does not return
@@ -1296,12 +1493,23 @@ long * nds_file_open(char *param_1,long param_2,int param_3,int param_4)
   
   __ptr = (long *)0x0;
   local_8 = (long)__stack_chk_guard;
+  // #region agent log
+  debug_log("nds_file_open:entry", "Entering nds_file_open", "B", (void*)param_1, 0, 0);
+  // #endregion
   iVar3 = 1;
   if (param_4 != 0) {
     iVar3 = 0x8001;
   }
-  if ((param_1 == (char *)0x0) || (__fd = open(param_1,0), __fd < 0)) goto LAB_00175820;
+  if ((param_1 == (char *)0x0) || (__fd = open(param_1,0), __fd < 0)) {
+    // #region agent log
+    debug_log("nds_file_open:file_open_failed", "File open failed", "B", (void*)param_1, __fd, 0);
+    // #endregion
+    goto LAB_00175820;
+  }
   __ptr = malloc(0x20);
+  // #region agent log
+  debug_log("nds_file_open:after_malloc", "After malloc", "B", (void*)__ptr, 0, 0);
+  // #endregion
   if (__ptr == (long *)0x0) {
     close(__fd);
     goto LAB_00175820;
@@ -1322,7 +1530,13 @@ LAB_0017598c:
       __ptr[2] = CONCAT44((int)_Var5,(int)_Var5);
       if (param_3 == 0) {
         lseek(__fd,0,0);
+        // #region agent log
+        debug_log("nds_file_open:before_mmap1", "Before first mmap", "C", nullptr, *(uint *)((long)__ptr + 0x14), 0);
+        // #endregion
         pvVar4 = mmap((void *)0x0,(ulong)*(uint *)((long)__ptr + 0x14),1,iVar3,__fd,0);
+        // #region agent log
+        debug_log("nds_file_open:after_mmap1", "After first mmap", "C", pvVar4, (pvVar4 == (void *)0xffffffffffffffff) ? 1 : 0, 0);
+        // #endregion
         __ptr[1] = (long)pvVar4;
         if (pvVar4 != (void *)0xffffffffffffffff) goto LAB_00175820;
         puts("Could not mmap cached ROM.");
@@ -1344,7 +1558,13 @@ LAB_0017598c:
       }
       printf("Trimmed ROM size to %d bytes.\n",uVar10);
       lseek(__fd,0,0);
+      // #region agent log
+      debug_log("nds_file_open:before_mmap2", "Before second mmap", "C", nullptr, uVar10, 0);
+      // #endregion
       pvVar4 = mmap((void *)0x0,(ulong)*(uint *)((long)__ptr + 0x14),1,iVar3,__fd,0);
+      // #region agent log
+      debug_log("nds_file_open:after_mmap2", "After second mmap", "C", pvVar4, (pvVar4 == (void *)0xffffffffffffffff) ? 1 : 0, 0);
+      // #endregion
       __ptr[1] = (long)pvVar4;
       if (pvVar4 != (void *)0xffffffffffffffff) goto LAB_00175820;
       puts("Could not mmap cached ROM.");
@@ -1547,7 +1767,7 @@ void nds_file_close(int *param_1)
 
 // --- 函数: close ---
 
-int close(int __fd)
+int _close(int __fd)
 
 {
   int iVar1;
@@ -1586,7 +1806,7 @@ void lua_on_load_game(undefined8 param_1)
 
 // --- 函数: fclose ---
 
-int fclose(FILE *__stream)
+int _fclose(FILE *__stream)
 
 {
   int iVar1;
@@ -1597,7 +1817,7 @@ int fclose(FILE *__stream)
 
 // --- 函数: strncpy ---
 
-char * strncpy(char *__dest,char *__src,size_t __n)
+char * _strncpy(char *__dest,char *__src,size_t __n)
 
 {
   char *pcVar1;
@@ -1608,7 +1828,7 @@ char * strncpy(char *__dest,char *__src,size_t __n)
 
 // --- 函数: memcpy ---
 
-void * memcpy(void *__dest,void *__src,size_t __n)
+void * _memcpy(void *__dest,void *__src,size_t __n)
 
 {
   void *pvVar1;
@@ -1619,7 +1839,7 @@ void * memcpy(void *__dest,void *__src,size_t __n)
 
 // --- 函数: strrchr ---
 
-char * strrchr(char *__s,int __c)
+char * _strrchr(char *__s,int __c)
 
 {
   char *pcVar1;
@@ -1630,7 +1850,7 @@ char * strrchr(char *__s,int __c)
 
 // --- 函数: getcwd ---
 
-char * getcwd(char *__buf,size_t __size)
+char * _getcwd(char *__buf,size_t __size)
 
 {
   char *pcVar1;
@@ -1641,7 +1861,7 @@ char * getcwd(char *__buf,size_t __size)
 
 // --- 函数: fwrite ---
 
-size_t fwrite(void *__ptr,size_t __size,size_t __n,FILE *__s)
+size_t _fwrite(void *__ptr,size_t __size,size_t __n,FILE *__s)
 
 {
   size_t sVar1;
@@ -1652,7 +1872,7 @@ size_t fwrite(void *__ptr,size_t __size,size_t __n,FILE *__s)
 
 // --- 函数: free ---
 
-void free(void *__ptr)
+void _free(void *__ptr)
 
 {
   free(__ptr);
@@ -4828,7 +5048,16 @@ undefined8 initialize_lua(long param_1)
 void platform_initialize()
 
 {
-  SDL_Init(0x101230);
+  fprintf(stderr, "DEBUG: platform_initialize: calling SDL_Init\n");
+  fflush(stderr);
+  int result = SDL_Init(0x101230);
+  if (result != 0) {
+    fprintf(stderr, "ERROR: SDL_Init failed: %s\n", SDL_GetError());
+    fflush(stderr);
+  } else {
+    fprintf(stderr, "DEBUG: platform_initialize: SDL_Init succeeded\n");
+    fflush(stderr);
+  }
   return;
 }
 
@@ -5182,6 +5411,9 @@ void menu_bios_warning(long param_1)
 void initialize_memory(long *param_1, long param_2)
 
 {
+  // #region agent log
+  debug_log("initialize_memory:entry", "Entering initialize_memory", "D", (void*)param_1, param_2, 0);
+  // #endregion
   long lVar1;
   long lVar2;
   int iVar3;
@@ -5210,39 +5442,57 @@ void initialize_memory(long *param_1, long param_2)
   param_1[0x1fa97] = param_2 + 800;
   param_1[0x1fa98] = param_2 + 0x30d0;
   param_1[0x1fa99] = param_2 + 0x5528;
-  *(long **)(nds_system + param_2 + 0x20ce128) = param_1;
-  *(long **)(nds_system + param_2 + 0x30d4718) = param_1;
-  *(long **)(nds_system + param_2 + 0x20ce120) = param_1 + 0x1f753;
-  *(long **)(nds_system + param_2 + 0x30d4710) = param_1 + 0x1f8d3;
-  *(long *)(nds_system + param_2 + 0x20ce130) = lVar1;
-  *(long *)(nds_system + param_2 + 0x30d4720) = lVar2;
+  // #region agent log
+  debug_log("initialize_memory:before_first_pointer_assign", "Before first pointer assignments", "D", (void*)nds_system, param_2, 0);
+  // #endregion
+  *(long **)(param_2 + 0x20ce128) = param_1;
+  *(long **)(param_2 + 0x30d4718) = param_1;
+  *(long **)(param_2 + 0x20ce120) = param_1 + 0x1f753;
+  *(long **)(param_2 + 0x30d4710) = param_1 + 0x1f8d3;
+  *(long *)(param_2 + 0x20ce130) = lVar1;
+  *(long *)(param_2 + 0x30d4720) = lVar2;
   local_8 = (long)__stack_chk_guard;
   iVar3 = getpagesize();
   *(int *)((long)param_1 + 0xfd4dc) = iVar3;
-  memset(local_108, 0, 16);  // builtin_strncpy replaced
-  local_f8 = 0x642e79726f6d65;
-  uStack_f1 = 0x61;
-  local_f0[0] = 't';
-  local_f0[1] = '\0';
+  // POSIX shared memory names must start with '/'
+  snprintf(local_108, 16, "/memory.dat");
   iVar3 = shm_open(local_108,0x42,0x1ff);
+  if (iVar3 < 0) {
+    perror("shm_open failed");
+    puts("ERROR: Memory map buffer failed.");
+    exit(-1);
+  }
   iVar4 = ftruncate(iVar3,0x414000);
   if (iVar4 < 0) {
     printf("Truncate of memory mapped file %s failed.\n",local_108);
+    perror("ftruncate failed");
+    close(iVar3);
+    puts("ERROR: Memory map buffer failed.");
+    exit(-1);
   }
-  shm_unlink(local_108);
   pvVar5 = mmap((void *)0x0,0x4000000,3,1,iVar3,0);
+  shm_unlink(local_108);
   *(int *)(param_1 + 0x1fa9d) = iVar3;
   param_1[0x1fa9c] = (long)pvVar5;
   if (pvVar5 == (void *)0xffffffffffffffff) {
     puts("Memory map buffer failed. Trying large allocation.");
     close((int)param_1[0x1fa9d]);
     iVar3 = shm_open(local_108,0x42,0x1ff);
+    if (iVar3 < 0) {
+      perror("shm_open failed");
+      puts("ERROR: Memory map buffer failed.");
+      exit(-1);
+    }
     iVar4 = ftruncate(iVar3,0x4000000);
     if (iVar4 < 0) {
       printf("Truncate of memory mapped file %s failed.\n",local_108);
+      perror("ftruncate failed");
+      close(iVar3);
+      puts("ERROR: Memory map buffer failed.");
+      exit(-1);
     }
-    shm_unlink(local_108);
     pvVar5 = mmap((void *)0x0,0x4000000,3,1,iVar3,0);
+    shm_unlink(local_108);
     *(int *)(param_1 + 0x1fa9d) = iVar3;
     param_1[0x1fa9c] = (long)pvVar5;
     if (pvVar5 == (void *)0xffffffffffffffff) {
@@ -5371,10 +5621,19 @@ LAB_0011c1bc:
   param_1[0x2a0b] = lVar9 + 0x98000;
   param_1[0x2a0c] = lVar9 + 0xa0000;
   param_1[0x2a0d] = lVar9 + 0xa4000;
+  // #region agent log
+  debug_log("initialize_memory:before_memory_map", "Before memory map initialization", "D", (void*)param_1, param_2, 0);
+  // #endregion
   initialize_memory_map_arm9(param_1);
   initialize_memory_map_arm7(param_1);
   puts("  Initializing CP15.");
+  // #region agent log
+  debug_log("initialize_memory:before_coprocessor", "Before coprocessor initialization", "D", (void*)param_1, param_2 + 0x1faa3, 0);
+  // #endregion
   initialize_coprocessor(param_1 + 0x1faa3,lVar1);
+  // #region agent log
+  debug_log("initialize_memory:before_pointer_assign", "Before pointer assignment", "D", (void*)nds_system, param_2 + 0x10cdfa0, 0);
+  // #endregion
   *(long **)(nds_system + param_2 + 0x10cdfa0) = param_1 + 0x1faa3;
   *(undefined8 *)(nds_system + param_2 + 0x20d4590) = 0;
   *(long **)(nds_system + param_2 + 0x10cddd0) = param_1 + 0x360e;
@@ -5476,7 +5735,7 @@ void initialize_cpu(long *param_1,long param_2,int param_3,long param_4)
 
 // --- 函数: malloc ---
 
-void * malloc(size_t __size)
+void * _malloc(size_t __size)
 
 {
   void *pvVar1;
@@ -7408,8 +7667,8 @@ int load_file(long *param_1,long *param_2,char *param_3)
   undefined *local_d0e8 [3];
   undefined1 auStack_d0d0 [216];
   long local_cff8;
-  ushort local_cfd0 [24336];
-  undefined1 auStack_11b0 [2528];
+  ushort *local_cfd0 = (ushort*)malloc(24336 * sizeof(ushort));  // Changed from stack to heap to prevent stack overflow
+  // Removed unused auStack_11b0 [2528] to reduce stack usage
   ushort local_7d0;
   char acStack_7ce [6];
   undefined1 auStack_7c8 [32];
@@ -7437,6 +7696,10 @@ int load_file(long *param_1,long *param_2,char *param_3)
   
   lVar21 = *param_1;
   local_8 = (long)__stack_chk_guard;
+  if (local_cfd0 == (ushort*)0x0) {
+    fprintf(stderr, "ERROR: Failed to allocate local_cfd0 buffer (24336 * sizeof(ushort))\n");
+    return -1;
+  }
   local_d0e8[0] = PTR_s_filename_002603d8;
   local_d0e8[1] = PTR_s_title_002603e0;
   local_d0e8[2] = PTR_s_rom_title_002603e8;
@@ -8113,6 +8376,10 @@ LAB_0017bfec:
   } while (puVar14 != puVar12 + (ulong)(uVar23 - 1) * 3 + 3);
 LAB_0017c024:
   lVar21 = 0;
+  if (local_cfd0 != (ushort*)0x0) {
+    free(local_cfd0);
+    local_cfd0 = (ushort*)0x0;
+  }
   free(puVar12);
   if (local_d25c != 0) {
     do {

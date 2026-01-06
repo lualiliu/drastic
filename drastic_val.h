@@ -151,7 +151,9 @@ int _pos;
 };
 #endif
 
-undefined1 nds_system[62042112];
+// 改为动态分配，避免静态大数组导致的问题
+// undefined1 nds_system[62042112];
+extern undefined1* nds_system;
 
 #ifndef _STAT64_DEFINED
 #ifdef __GLIBC__
@@ -269,7 +271,7 @@ struct statvfs64 {
     int __f_spare[6];
 };
 
-typedef long __jmp_buf[8];
+//typedef long __jmp_buf[8];
 
 typedef struct _IO_FILE FILE;
 

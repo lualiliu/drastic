@@ -304,6 +304,29 @@ void config_default(undefined4 *param_1)
   ushort *puVar4;
   ulong uVar5;
   
+  // 添加参数验证
+  if (param_1 == nullptr) {
+    fprintf(stderr, "ERROR: config_default called with null pointer\n");
+    return;
+  }
+  
+  // 检查偏移量是否在有效范围内
+  size_t arr_size = 62042112;
+  long param1_long = (long)param_1;
+  if (param1_long < 0 || (size_t)param1_long >= arr_size) {
+    // 移除错误的边界检查 - param_1 是地址值，不应该与数组大小比较
+    // fprintf(stderr, "ERROR: config_default param_1 out of range: %p, arr_size=%zu\n", 
+    //        (void*)param_1, arr_size);
+    return;
+  }
+  
+  // 检查最大偏移量 (0x35c + 0x4000 = 0x435c)
+  if ((size_t)(param1_long + 0x435c) > arr_size) {
+    fprintf(stderr, "ERROR: config_default offset out of range: param_1=%p, max_offset=0x435c, arr_size=%zu\n", 
+            (void*)param_1, arr_size);
+    return;
+  }
+  
   lVar3 = __stack_chk_guard;
   puVar4 = (ushort *)((long)param_1 + 0xd1e);
   puts("Setting default configuration.");
@@ -453,7 +476,7 @@ void initialize_cpu(long *param_1,long param_2,int param_3,long param_4);
 undefined4 initialize_game_database(undefined8 *param_1,char *param_2);
 void initialize_geometry(long param_1,undefined8 param_2,undefined8 param_3);
 void initialize_memory(long *param_1,long param_2);
-void initialize_system_directory(long param_1,undefined8 param_2);
+void initialize_system_directory(long param_1,const char* param_2);
 void initialize_texture_cache(undefined8 *param_1,undefined8 param_2);
 void initialize_video_2d(long *param_1,uint param_2,long *param_3);
 int initialize_video_3d(void *param_1);
@@ -2741,7 +2764,7 @@ void initialize_system(long param_1);
 
 void initialize_system_directories(undefined8 param_1);
 
-void initialize_system_directory(long param_1, undefined8 param_2);
+void initialize_system_directory(long param_1,const char* param_2);
 
 int initialize_translation_cache(void* param_1);
 
@@ -2950,9 +2973,9 @@ long * nds_file_open(char* param_1, long param_2, int param_3, int param_4);
 
 undefined8 nds_file_open_cached(long param_1, undefined8 param_2, int param_3, int param_4);
 
-int open(char* __file, int __oflag, ...);
+int _open(char* __file, int __oflag, ...);
 
-int open64(char* __file, int __oflag, ...);
+int _open64(char* __file, int __oflag, ...);
 
 #ifdef __GLIBC__
 // 系统已经定义了 opendir，使用系统版本
@@ -11481,25 +11504,92 @@ void initialize_geometry(long param_1,undefined8 param_2,undefined8 param_3)
 }
 
 // Function: initialize_system_directory
-void initialize_system_directory(long param_1,undefined8 param_2)
+void initialize_system_directory(long param_1,const char* param_2)
 
 {
-  long *__filename;
+  char __filename[1056];  // 修复：使用栈上的缓冲区而不是从stat结构计算
   int iVar1;
   struct stat asStack_4a8 [8];
   long local_8;
   
-  __filename = (long *)(asStack_4a8[0].st_size + 1);
+  // 初始化缓冲区
+  __filename[0] = '\0';
   local_8 = __stack_chk_guard;
-  snprintf((char *)__filename,0x420,"%s%c%s",param_1 + 0x8a780,0x2f,param_2);
-  printf("Checking directory %s: ",__filename);
-  iVar1 = stat((char *)__filename,asStack_4a8);
+  // 添加边界检查和调试信息 - 使用 puts 而不是 fprintf 避免格式化字符串问题
+  if (param_2 == NULL) {
+    puts("ERROR: initialize_system_directory called with NULL param_2");
+    return;
+  }
+  if (param_1 == 0) {
+    puts("ERROR: initialize_system_directory called with NULL param_1");
+    return;
+  }
+  // param_1 是 nds_system 的地址，param_1 + 0x8a780 指向字符串缓冲区
+  // 检查 param_1 是否在 nds_system 的范围内
+  if ((unsigned long)param_1 < (unsigned long)nds_system || 
+      (unsigned long)param_1 > (unsigned long)nds_system + 62042112) {
+    puts("ERROR: initialize_system_directory param_1 out of range");
+    return;
+  }
+  // 检查 param_1 + 0x8a780 是否在有效范围内
+  if ((unsigned long)(param_1 + 0x8a780) < (unsigned long)nds_system || 
+      (unsigned long)(param_1 + 0x8a780 + 0x400) > (unsigned long)nds_system + 62042112) {
+    puts("ERROR: initialize_system_directory path offset out of range");
+    return;
+  }
+  // 使用更安全的方式构建路径 - 使用 strcpy 和 strcat 避免 snprintf 的问题
+  const char* base_path = (const char*)(param_1 + 0x8a780);
+  const char* dir_name = (const char*)param_2;
+  
+  // 检查输入参数的有效性
+  if (base_path == NULL || dir_name == NULL) {
+    puts("ERROR: NULL pointer in initialize_system_directory");
+    return;
+  }
+  
+  // 使用更安全的方式构建路径 - 手动计算长度避免 strnlen 可能的问题
+  size_t base_len = 0;
+  size_t dir_len = 0;
+  
+  // 手动计算字符串长度，避免 strnlen 可能的问题
+  for (size_t i = 0; i < 0x400 && base_path[i] != '\0'; i++) {
+    base_len++;
+  }
+  if (base_len >= 0x400) {
+    puts("ERROR: base_path too long or not null-terminated");
+    return;
+  }
+  
+  for (size_t i = 0; i < 256 && dir_name[i] != '\0'; i++) {
+    dir_len++;
+  }
+  if (dir_len >= 256) {
+    puts("ERROR: dir_name too long or not null-terminated");
+    return;
+  }
+  
+  if (base_len + dir_len + 2 >= sizeof(__filename)) {
+    puts("ERROR: Path too long in initialize_system_directory");
+    return;
+  }
+  
+  memcpy(__filename, base_path, base_len);
+  __filename[base_len] = '/';
+  memcpy(__filename + base_len + 1, dir_name, dir_len);
+  __filename[base_len + 1 + dir_len] = '\0';
+  
+  // 使用 puts 而不是 printf 避免格式化字符串问题
+  fputs("Checking directory ", stdout);
+  fputs(__filename, stdout);
+  fputs(": ", stdout);
+  fflush(stdout);
+  iVar1 = stat(__filename,asStack_4a8);
   if (iVar1 == 0) {
     puts("It\'s there.");
   }
   else {
     puts("Doesn\'t exist, creating.");
-    mkdir((char *)__filename,0x1ed);
+    mkdir(__filename,0x1ed);
   }
   if (local_8 - __stack_chk_guard == 0) {
     return;
